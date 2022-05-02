@@ -9,9 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 288616a303bb99a4e834b1dd2570d3b6, type: 3}
-  m_Name: PlayableData
+  m_Script: {fileID: 11500000, guid: ad00e9a600f4f9d47b4c663d4e4e3b2f, type: 3}
+  m_Name: PlayerInputData
   m_EditorClassIdentifier: 
-  hp: 1000
-  maxHP: 1000
-  damage: 100
+  MoveActionName: Move
+  LookActionName: Look
+  JumpActionName: Jump
+  AttackActionName: Attack
