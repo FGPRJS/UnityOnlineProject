@@ -542,6 +542,9 @@ sysinfo.txt
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
+# ImportedResource
+/[Aa]ssets/ImportResource
+
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
