@@ -43,7 +43,9 @@ namespace Script
             var readedMoveAction = moveAction.ReadValue<Vector2>();
             Vector3 normalizedMoveVector = 
                 new Vector3(readedMoveAction.x, 0, readedMoveAction.y).normalized;
-            var resultMoveVector = normalizedMoveVector * (playerData.Speed * Time.deltaTime);
+            Vector3 toFrontMoveVector =
+                transform.TransformDirection(normalizedMoveVector);
+            var resultMoveVector = toFrontMoveVector * (playerData.Speed * Time.deltaTime);
             resultMoveVector.y += gravityYValue * Time.deltaTime;
             controller.Move(resultMoveVector);
 
@@ -57,6 +59,14 @@ namespace Script
                 gravityYValue = playerData.JumpPower;
             }
             
+            #endregion
+            
+            #region Look
+
+            var readedLookAction = lookAction.ReadValue<Vector2>();
+            var rotateVector = new Vector3(-readedLookAction.y, readedLookAction.x, 0) * 10.0f;
+            transform.localEulerAngles += rotateVector * Time.deltaTime;
+
             #endregion
         }
     }
