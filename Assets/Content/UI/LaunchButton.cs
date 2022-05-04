@@ -21,7 +21,7 @@ namespace Content.UI
 
         private void ButtonClicked()
         {
-            TCPCommunicator.instance.ConnectToServer();
+            TCPCommunicator.Instance.ConnectToServer();
         }
     }
 }
