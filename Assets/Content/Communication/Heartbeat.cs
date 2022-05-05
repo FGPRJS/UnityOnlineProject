@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Content.Communication.Protocol;
+﻿using Content.Communication.Protocol;
 using UnityEngine.Events;
 
 namespace Content.Communication
@@ -12,7 +11,7 @@ namespace Content.Communication
         private float _currentHeartbeatTime = 0;
         private int _currentHeartbeatTimeoutCount = 0;
 
-        internal static CommunicationMessage<Dictionary<string,string>> HeartbeatMessage;
+        internal static CommunicationMessage HeartbeatMessage;
         internal static byte[] HeartbeatMessageByteData;
 
         //Event is Sync cause using Task in unity cause non-predictable issue.
@@ -25,12 +24,9 @@ namespace Content.Communication
         {
             if ((HeartbeatMessage != null) && (HeartbeatMessageByteData != null)) return;
 
-            HeartbeatMessage = new CommunicationMessage<Dictionary<string,string>>()
+            HeartbeatMessage = new CommunicationMessage()
             {
-                header = new Header()
-                {
-                    MessageName = MessageType.HeartBeatRequest.ToString()
-                }
+                MessageType = CommandType.HeartBeatRequest
             };
 
             HeartbeatMessageByteData = CommunicationUtility.Serialize(HeartbeatMessage);
