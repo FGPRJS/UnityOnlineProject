@@ -532,6 +532,8 @@ sysinfo.txt
 *.aab
 *.unitypackage
 *.app
+/BuildPC
+/BuildWeb
 
 # Crashlytics generated file
 
