@@ -37,7 +37,7 @@ namespace Content.Communication
             _currentHeartbeatTime = 0;
             _currentHeartbeatTimeoutCount = 0;
         }
-        
+
         public void CountHeartbeat(float interval)
         {
             _currentHeartbeatTime += interval;
