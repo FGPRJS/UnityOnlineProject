@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using Content.Communication.Protocol;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -23,12 +26,12 @@ namespace Content.Communication
 
         public UnityEvent connectedEvent;
         public UnityEvent disconnectedEvent;
-        public UnityEvent<CommunicationMessage> dataReceivedEvent;
+        public UnityEvent<CommunicationMessage<Dictionary<string,string>>> dataReceivedEvent;
         public UnityEvent dataSendEvent;
 
         private void Awake()
         {
-            //Singleton
+            #region Singleton
             if (Instance == null)
             {
                 Instance = this;
@@ -39,8 +42,10 @@ namespace Content.Communication
                 Debug.Log("Instance already exists");
                 Destroy(this);
             }
+            #endregion
         }
         
+        #region Socket Functions
         private void Initialize()
         {
             Debug.Log("Initialize client");
@@ -115,11 +120,10 @@ namespace Content.Communication
                 if (bytesRead > 0)
                 {
                     var receivedMessage = CommunicationUtility.Deserialize(_receiveBuffer);
-                    Debug.Log(receivedMessage.Message);
                     dataReceivedEvent?.Invoke(receivedMessage);
+                    _heartbeat.ResetHeartbeat();
+                    BeginReceive();
                 }
-
-                BeginReceive();
             }
             catch (NullReferenceException)
             {
@@ -132,7 +136,7 @@ namespace Content.Communication
             }
         }
 
-        public void SendData(CommunicationMessage message)
+        public void SendData(CommunicationMessage<Dictionary<string,string>> message)
         {
             if (_socket == null) return;
             
@@ -148,7 +152,6 @@ namespace Content.Communication
             {
                 Debug.Log("Send Failure. Reason : " + ex.Message);
             }
-            
         }
 
         public void SendData(byte[] byteData)
@@ -162,6 +165,7 @@ namespace Content.Communication
                     SocketFlags.None,
                     SendComplete,
                     _socket);
+                Debug.Log("Sending Data Info : " + JsonConvert.DeserializeObject(Encoding.ASCII.GetString(byteData)));
             }
             catch (SocketException)
             {
@@ -195,6 +199,8 @@ namespace Content.Communication
             Debug.Log("Shutdown complete!");
         }
         
+        #endregion
+        
         private void FixedUpdate()
         {
             //Heartbeat
@@ -207,40 +213,9 @@ namespace Content.Communication
             _heartbeat = new Heartbeat();
             _heartbeat.HeartbeatTickEvent += HeartbeatTick;
             _heartbeat.HeartbeatTimeOutEvent += HeartbeatTimeout;
+            dataReceivedEvent.AddListener(HeartbeatReply);
         }
 
-        #region Delegate Event Wrapping
-        void DataReceived(CommunicationMessage message)
-        {
-            dataReceivedEvent?.Invoke(message);
-            
-            //temp
-            switch (message.MessageType)
-            {
-                case CommandType.HeartBeatRequest:
-
-                    SendData(Heartbeat.HeartbeatMessageByteData);
-                    
-                    break;
-            }
-        }
-
-        void Connected()
-        {
-            connectedEvent?.Invoke();
-        }
-
-        void Disconnected()
-        {
-            disconnectedEvent?.Invoke();
-        }
-
-        void DataSend()
-        {
-            dataSendEvent.Invoke();
-        }
-        #endregion
-        
         void OnDisable()
         {
             ShutDown();
@@ -267,6 +242,20 @@ namespace Content.Communication
         void HeartbeatTimeout()
         {
             ShutDown();
+        }
+
+        void HeartbeatReply(CommunicationMessage<Dictionary<string,string>> message)
+        {
+            if (message.header.MessageName == MessageType.HeartBeatRequest.ToString())
+            {
+                SendData(new CommunicationMessage<Dictionary<string,string>>()
+                {
+                    header = new Header()
+                    {
+                        MessageName = MessageType.HeartBeatRequest.ToString()
+                    }
+                });
+            }
         }
         #endregion
     }
