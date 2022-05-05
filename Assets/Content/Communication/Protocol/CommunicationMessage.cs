@@ -1,17 +1,39 @@
 ﻿using System;
+using UnityEngine;
 
 namespace Content.Communication.Protocol
 {
-    public enum CommandType
+    [Serializable]
+    public enum MessageType
     {
-        ConnectionRequest,
+        LoginRequest,
         HeartBeatRequest
+    }
+    
+    [Serializable]
+    public enum ACK
+    {
+        None = 0,
+        ACK,
+        NACK
     }
 
     [Serializable]
-    public class CommunicationMessage
+    public class CommunicationMessage<T>
     {
-        public CommandType MessageType;
-        public string Message;
+        public Header header;
+        public Body<T> body;
+    }
+    [Serializable]
+    public class Header
+    {
+        public int ACK;
+        public string Reason;
+        public string MessageName;
+    }
+    [Serializable]
+    public class Body<T>
+    {
+        public T Any;
     }
 }

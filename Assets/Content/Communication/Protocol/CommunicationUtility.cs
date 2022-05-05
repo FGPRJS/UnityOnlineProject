@@ -1,27 +1,29 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Content.Communication.Protocol
 {
     internal class CommunicationUtility
     {
-        public static byte[] Serialize(CommunicationMessage message)
+        public static byte[] Serialize(CommunicationMessage<Dictionary<string,string>> message)
         {
-            var data = JsonUtility.ToJson(message);
+            var data = JsonConvert.SerializeObject(message);
 
             return Encoding.ASCII.GetBytes(data);
         }
 
-        public static CommunicationMessage Deserialize(string json)
+        public static CommunicationMessage<Dictionary<string,string>> Deserialize(string json)
         {
-            return JsonUtility.FromJson<CommunicationMessage>(json);
+            return JsonConvert.DeserializeObject<CommunicationMessage<Dictionary<string,string>>>(json);
         }
 
-        public static CommunicationMessage Deserialize(byte[] jsonByte)
+        public static CommunicationMessage<Dictionary<string,string>> Deserialize(byte[] jsonByte)
         {
             var data = Encoding.ASCII.GetString(jsonByte);
 
-            return JsonUtility.FromJson<CommunicationMessage>(data);
+            return JsonConvert.DeserializeObject<CommunicationMessage<Dictionary<string,string>>>(data);
         }
     }
 }
