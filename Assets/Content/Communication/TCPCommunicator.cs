@@ -1,11 +1,13 @@
 using System;
-using Unity.VisualScripting;
+using Content.Communication.Protocol;
 using UnityEngine;
-using UnityOnlineProjectProtocol.Protocol;
-using Object = UnityEngine.Object;
+using UnityEngine.Events;
 
 namespace Content.Communication
 {
+    /// <summary>
+    /// Client Socket Wrapper
+    /// </summary>
     public class TCPCommunicator : MonoBehaviour
     {
         public static TCPCommunicator Instance;
@@ -15,19 +17,19 @@ namespace Content.Communication
         private Client _client;
         private Heartbeat _heartbeat;
 
+        public UnityEvent connectedEvent;
+        public UnityEvent disconnectedEvent;
+        public UnityEvent<CommunicationMessage> dataReceivedEvent;
+        public UnityEvent dataSendEvent;
+        
+
         private void Awake()
         {
-            _client = new Client(ip, port);
-            _client.DataReceivedEvent += DataReceivedFromServer;
-            
-            _heartbeat = new Heartbeat();
-            _heartbeat.HeartbeatTickEvent += HeartbeatTick;
-            _heartbeat.HeartbeatTimeOutEvent += HeartbeatTimeout;
             //Singleton
             if (Instance == null)
             {
                 Instance = this;
-                Object.DontDestroyOnLoad(Instance);
+                UnityEngine.Object.DontDestroyOnLoad(Instance);
             }
             else if (Instance != this)
             {
@@ -48,25 +50,61 @@ namespace Content.Communication
             if(_client.isConnected)
                 _heartbeat.CountHeartbeat(Time.deltaTime);
         }
-
-        private void DataReceivedFromServer(CommunicationMessage message)
+        
+        private void OnEnable()
         {
-            _heartbeat.ResetHeartbeat();
-            //Temp
-            switch (message.MessageType)
-            {
-                case CommandType.HeartBeatRequest:
-
-                    //Just Reply
-                    _client.SendData(Heartbeat.HeartbeatMessageByteData);
-                    
-                    break;
-            }
+            _client = new Client(ip, port);
+            _client.DataReceivedEvent += DataReceived;
+            _client.ConnectedEvent += Connected;
+            _client.DisconnectedEvent += Disconnected;
+            _client.DataSendEvent += DataSend;
+            
+            _heartbeat = new Heartbeat();
+            _heartbeat.HeartbeatTickEvent += HeartbeatTick;
+            _heartbeat.HeartbeatTimeOutEvent += HeartbeatTimeout;
         }
 
-        void OnDestroy()
+        #region Delegate Event Wrapping
+        void DataReceived(CommunicationMessage message)
+        {
+            dataReceivedEvent?.Invoke(message);
+        }
+
+        void Connected()
+        {
+            connectedEvent?.Invoke();
+        }
+
+        void Disconnected()
+        {
+            disconnectedEvent?.Invoke();
+        }
+
+        void DataSend()
+        {
+            dataSendEvent.Invoke();
+        }
+        #endregion
+        
+        void OnDisable()
         {
             _client.ShutDown();
+
+            _client.DataReceivedEvent -= DataReceived;
+            _client.ConnectedEvent -= Connected;
+            _client.DisconnectedEvent -= Disconnected;
+            _client.DataSendEvent -= DataSend;
+            
+            connectedEvent.RemoveAllListeners();
+            disconnectedEvent.RemoveAllListeners();
+            dataReceivedEvent.RemoveAllListeners();
+            dataSendEvent.RemoveAllListeners();
+
+            _heartbeat.HeartbeatTickEvent -= HeartbeatTick;
+            _heartbeat.HeartbeatTimeOutEvent -= HeartbeatTimeout;
+
+            _heartbeat = null;
+            _client = null;
         }
         
         #region Heartbeat

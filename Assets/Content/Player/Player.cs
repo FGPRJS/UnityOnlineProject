@@ -1,8 +1,8 @@
-using System;
+using Script;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Script
+namespace Content.Player
 {
     public class Player : MonoBehaviour
     {

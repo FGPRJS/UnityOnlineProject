@@ -1,17 +1,13 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text.Json;
+using Content.Communication.Protocol;
 using UnityEngine;
-using UnityOnlineProjectProtocol;
-using UnityOnlineProjectProtocol.Connection;
-using UnityOnlineProjectProtocol.Protocol;
 
 namespace Content.Communication
 {
     public class Client
     {
-        [NonSerialized]
         public bool isConnected = false;
         
         private Socket _socket;
@@ -21,8 +17,16 @@ namespace Content.Communication
         private byte[] _receiveBuffer;
         
         public delegate void DataReceived(CommunicationMessage message);
-
         public event DataReceived DataReceivedEvent;
+
+        public delegate void Connected();
+        public event Connected ConnectedEvent;
+
+        public delegate void Disconnected();
+        public event Disconnected DisconnectedEvent;
+
+        public delegate void DataSend();
+        public event DataSend DataSendEvent;
         
 
         public Client(string ip, int port)
@@ -71,7 +75,8 @@ namespace Content.Communication
         {
             _socket.EndConnect(ar);
             isConnected = true;
-
+            ConnectedEvent?.Invoke();
+            
             BeginReceive();
             
             Debug.Log("Successfully connected!");
@@ -90,12 +95,28 @@ namespace Content.Communication
         
         private void DataReceivedCallback(IAsyncResult ar)
         {
-            var receivedMessage = CommunicationUtility.Deserialize(_receiveBuffer);
-            Debug.Log(receivedMessage.Message);
-            DataReceivedEvent?.Invoke(receivedMessage);
+            try
+            {
+                int bytesRead = _socket.EndReceive(ar);
 
-            _socket.EndReceive(ar);
-            BeginReceive();
+                if (bytesRead > 0)
+                {
+                    var receivedMessage = CommunicationUtility.Deserialize(_receiveBuffer);
+                    Debug.Log(receivedMessage.Message);
+                    DataReceivedEvent?.Invoke(receivedMessage);
+                }
+
+                BeginReceive();
+            }
+            catch (NullReferenceException)
+            {
+                Debug.Log("Socket is null.");
+            }
+            catch (SocketException ex)
+            {
+                Debug.Log("Socket is not usable. Reason : " + ex.Message);
+                ShutDown();
+            }
         }
 
         public void SendData(CommunicationMessage message)
@@ -119,18 +140,27 @@ namespace Content.Communication
 
         public void SendData(byte[] byteData)
         {
-            _socket?.BeginSend(
-                byteData,
-                0,
-                byteData.Length,
-                SocketFlags.None,
-                SendComplete,
-                _socket);
+            try
+            {
+                _socket?.BeginSend(
+                    byteData,
+                    0,
+                    byteData.Length,
+                    SocketFlags.None,
+                    SendComplete,
+                    _socket);
+            }
+            catch (SocketException)
+            {
+                Debug.Log("Server Connection Lost.");
+                ShutDown();
+            }
         }
 
         private void SendComplete(IAsyncResult ar)
         {
             _socket.EndSend(ar);
+            DataSendEvent?.Invoke();
             
             Debug.Log("Send Complete!");
         }
@@ -138,10 +168,18 @@ namespace Content.Communication
         public void ShutDown()
         {
             Debug.Log("Shutdown client...");
-            _socket.Shutdown(SocketShutdown.Both);
-            _socket.Close();
+            try
+            {
+                _socket?.Shutdown(SocketShutdown.Both);
+                _socket?.Close();
+            }
+            catch (SocketException)
+            {
+                Debug.Log("Already ShutDowned");
+            }
             _socket = null;
             isConnected = false;
+            DisconnectedEvent?.Invoke();
             Debug.Log("Shutdown complete!");
         }
     }

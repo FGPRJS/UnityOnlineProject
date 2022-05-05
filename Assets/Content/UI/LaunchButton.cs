@@ -1,12 +1,15 @@
 using System;
 using Content.Communication;
+using Content.Global;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace Content.UI
 {
     public class LaunchButton : MonoBehaviour
     {
+        public UnityEvent clickedEvent;
         public Button button;
 
         public void OnEnable()
@@ -21,7 +24,7 @@ namespace Content.UI
 
         private void ButtonClicked()
         {
-            TCPCommunicator.Instance.ConnectToServer();
+            clickedEvent?.Invoke();
         }
     }
 }

@@ -1,31 +1,49 @@
-using Content.Global;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace Script.UI
+namespace Content.UI
 {
     public class LocalMessageWindow : MonoBehaviour
     {
         public LocalMessageWindowItem content;
-        
-        private void OnEnable()
+        public GameObject contentPanel;
+
+        private Queue<LocalMessageCommand> _messageQueue;
+
+        private void Awake()
         {
-            LocalMessageManager.Instance.MessageEvent.AddListener(MessageReceived);
+            _messageQueue = new Queue<LocalMessageCommand>();
         }
 
-        private void MessageReceived(MessageEventArg arg0)
+        public void AddMessage(string sender, string message)
         {
+            LocalMessageCommand cmd = new LocalMessageCommand
+            {
+                message = message,
+                sender = sender
+            };
             
+            _messageQueue.Enqueue(cmd);
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Update()
         {
-        
+            while (_messageQueue.Count > 0)
+            {
+                var cmd = _messageQueue.Dequeue();
+                
+                var item = Instantiate(content, contentPanel.transform, false);
+                item.MessageText.text = cmd.message;
+                item.SenderNameText.text = cmd.sender;
+            }
         }
+    }
 
-        private void OnDestroy()
-        {
-            
-        }
+    class LocalMessageCommand
+    {
+        internal string sender;
+        internal string message;
     }
 }

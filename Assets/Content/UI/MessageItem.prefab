@@ -91,8 +91,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1887ddd89f0ce8c4e81ffdfb5827d822, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SenderNameText: {fileID: 0}
-  MessageText: {fileID: 0}
+  SenderNameText: {fileID: 4220660089316942532}
+  MessageText: {fileID: 4220660089674650839}
 --- !u!1 &4220660089316942530
 GameObject:
   m_ObjectHideFlags: 0

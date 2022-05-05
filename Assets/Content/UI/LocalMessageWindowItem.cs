@@ -1,9 +1,7 @@
-using System;
 using TMPro;
-using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace Script.UI
+namespace Content.UI
 {
     public class LocalMessageWindowItem : MonoBehaviour
     {

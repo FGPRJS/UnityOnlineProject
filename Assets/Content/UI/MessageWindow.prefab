@@ -482,6 +482,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   content: {fileID: 2630465713695349544, guid: 377abbb95dfdaac42bef31e814e49bcb, type: 3}
+  contentPanel: {fileID: 362080972046039257}
 --- !u!1 &362080972869041851
 GameObject:
   m_ObjectHideFlags: 0

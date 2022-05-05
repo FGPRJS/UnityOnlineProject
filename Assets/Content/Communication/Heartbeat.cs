@@ -1,6 +1,5 @@
-﻿using UnityEngine.Events;
-using UnityOnlineProjectProtocol;
-using UnityOnlineProjectProtocol.Protocol;
+﻿using Content.Communication.Protocol;
+using UnityEngine.Events;
 
 namespace Content.Communication
 {
