@@ -7,7 +7,13 @@ namespace Content.Communication.Protocol
     public enum MessageType
     {
         LoginRequest,
-        HeartBeatRequest
+        HeartBeatRequest,
+        GameObjectSpawnRequest,
+        GameObjectSpawnReport,
+        GameObjectDestroyRequest,
+        GameObjectPositionReport,
+        GameObjectActionRequest,
+        PlayerChatReport
     }
     
     [Serializable]

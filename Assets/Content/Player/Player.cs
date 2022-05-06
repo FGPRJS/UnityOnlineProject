@@ -1,3 +1,4 @@
+using Content.Pawn;
 using Script;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,16 +7,13 @@ namespace Content.Player
 {
     public class Player : MonoBehaviour
     {
-        public PlayableData playerData;
+        public Tank pawn;
+        
         public PlayerInput input;
         public PlayerInputData inputData;
 
-        [SerializeField]
-        private CharacterController controller;
-        
         private InputAction moveAction;
-        private float gravityYValue;
-        
+
         private InputAction lookAction;
         private InputAction attackAction;
         private InputAction jumpAction;
@@ -33,41 +31,17 @@ namespace Content.Player
         // Update is called once per frame
         void Update()
         {
-            #region Move
-            #region Gravity
-
-            gravityYValue +=
-                Physics.gravity.y * Time.deltaTime;
-            
-            #endregion
             var readedMoveAction = moveAction.ReadValue<Vector2>();
-            Vector3 normalizedMoveVector = 
-                new Vector3(readedMoveAction.x, 0, readedMoveAction.y).normalized;
-            Vector3 toFrontMoveVector =
-                transform.TransformDirection(normalizedMoveVector);
-            var resultMoveVector = toFrontMoveVector * (playerData.Speed * Time.deltaTime);
-            resultMoveVector.y += gravityYValue * Time.deltaTime;
-            controller.Move(resultMoveVector);
-
-            #endregion
+            readedMoveAction *= Time.deltaTime;
             
-            #region Jump
-
-            var readedJumpAction = jumpAction.ReadValue<float>();
-            if ((readedJumpAction > 0) && (controller.isGrounded))
-            {
-                gravityYValue = playerData.JumpPower;
-            }
-            
-            #endregion
-            
-            #region Look
+            pawn.RotateTank(readedMoveAction.x);
+            pawn.MoveForward(readedMoveAction.y);
 
             var readedLookAction = lookAction.ReadValue<Vector2>();
-            var rotateVector = new Vector3(-readedLookAction.y, readedLookAction.x, 0) * 10.0f;
-            transform.localEulerAngles += rotateVector * Time.deltaTime;
+            readedLookAction *= Time.deltaTime;
 
-            #endregion
+            pawn.RotateCannon(readedLookAction.y);
+            pawn.RotateTower(readedLookAction.x);
         }
     }
 }

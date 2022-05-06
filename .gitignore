@@ -546,6 +546,8 @@ sysinfo.txt
 
 # ImportedResource
 /[Aa]ssets/ImportResource
+*.prefab
+
 
 ### Windows ###
 # Windows thumbnail cache files
