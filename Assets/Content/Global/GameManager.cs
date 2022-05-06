@@ -20,15 +20,12 @@ namespace Content.Global
         public string mainSceneName;
         public string loginSceneName;
 
-        private Queue<LoadSceneCommand> _commandQueue;
-        
         private void Awake()
         {
             //Singleton
             if (Instance == null)
             {
                 Instance = this;
-                _commandQueue = new Queue<LoadSceneCommand>();
             }
             else if (Instance != this)
             {
@@ -41,19 +38,7 @@ namespace Content.Global
         
         public void ChangeScene(string sceneName)
         {
-            _commandQueue.Enqueue(new LoadSceneCommand()
-            {
-                SceneName = sceneName
-            });
-        }
-
-        void Update()
-        {
-            if (_commandQueue.Count > 0)
-            {
-                var cmd = _commandQueue.Dequeue();
-                StartCoroutine(LoadScene(cmd.SceneName));
-            }
+            StartCoroutine(LoadScene(sceneName));
         }
 
         IEnumerator LoadScene(string sceneName)
@@ -67,10 +52,5 @@ namespace Content.Global
             }
             sceneLoadCompleteEvent.Invoke();
         }
-    }
-
-    class LoadSceneCommand
-    {
-        public string SceneName;
     }
 }

@@ -31,6 +31,9 @@ namespace Content.Player
         // Update is called once per frame
         void Update()
         {
+            #region PAWN Control
+            if (!pawn) return;
+            
             var readedMoveAction = moveAction.ReadValue<Vector2>();
             readedMoveAction *= Time.deltaTime;
             
@@ -42,6 +45,7 @@ namespace Content.Player
 
             pawn.RotateCannon(readedLookAction.y);
             pawn.RotateTower(readedLookAction.x);
+            #endregion
         }
     }
 }

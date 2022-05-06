@@ -2,15 +2,17 @@
 using System.Collections.Generic;
 using Content.Communication;
 using Content.Communication.Protocol;
+using Content.Pawn;
 using UnityEngine;
+using Random = System.Random;
 
 namespace Content.UI
 {
-    public class MainSceneController : MonoBehaviour
+    public class MainSceneController : ControllerBase
     {
         public LocalMessageWindow messageWindow;
         public Player.Player player;
-        
+        public List<Tank> tankInstances;
 
         void DataReceivedEventActivated(CommunicationMessage<Dictionary<string,string>> message)
         {
@@ -18,7 +20,7 @@ namespace Content.UI
             
             switch (messageName)
             {
-                case MessageType.GameObjectSpawnRequest:
+                case MessageType.TankSpawnRequest:
 
                     if (message.header.ACK != (int)ACK.ACK) return;
 
@@ -35,8 +37,18 @@ namespace Content.UI
                         float.Parse(readedQuaternion[2]),
                         float.Parse(readedQuaternion[3]));
 
-                    Instantiate(player, position, quaternion);
+                    #region TankType
 
+                    var tankType = int.Parse(message.body.Any["Type"]);
+
+                    AddAction(() =>
+                    {
+                        var tank = Instantiate(tankInstances[(int)tankType], position, quaternion);
+                        player.pawn = tank;
+                    });
+                    //Possess
+
+                    #endregion
                     break;
             }
         }
@@ -45,18 +57,21 @@ namespace Content.UI
         {
             //Subscribe Event
             TCPCommunicator.Instance.dataReceivedEvent.AddListener(DataReceivedEventActivated);
-        }
-
-        private void Start()
-        {
+            
             //Initial 
             TCPCommunicator.Instance.SendData(new CommunicationMessage<Dictionary<string,string>>()
             {
                 header = new Header()
                 {
-                    MessageName = MessageType.GameObjectSpawnRequest.ToString()
+                    MessageName = MessageType.TankSpawnRequest.ToString()
                 }
             });
+        }
+
+        private void OnDisable()
+        {
+            //Unsubscribe Event
+            TCPCommunicator.Instance.dataReceivedEvent.RemoveListener(DataReceivedEventActivated);
         }
     }
 }

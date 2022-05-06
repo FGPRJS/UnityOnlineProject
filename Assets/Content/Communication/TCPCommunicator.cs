@@ -121,6 +121,8 @@ namespace Content.Communication
                 {
                     var receivedMessage = CommunicationUtility.Deserialize(_receiveBuffer);
                     dataReceivedEvent?.Invoke(receivedMessage);
+                    Debug.Log("Received Data Info : " + Encoding.ASCII.GetString(_receiveBuffer));
+                    Array.Clear(_receiveBuffer, 0, _receiveBuffer.Length);
                     _heartbeat.ResetHeartbeat();
                     BeginReceive();
                 }
@@ -248,6 +250,10 @@ namespace Content.Communication
         {
             if (message.header.MessageName == MessageType.HeartBeatRequest.ToString())
             {
+                if (message.header.ACK == (int)ACK.ACK) return;
+
+                message.header.ACK = (int)ACK.ACK;
+            
                 SendData(new CommunicationMessage<Dictionary<string,string>>()
                 {
                     header = new Header()

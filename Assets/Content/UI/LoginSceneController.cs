@@ -14,7 +14,7 @@ namespace Content.UI
     /// <summary>
     /// Very Important GameObject cause this object controls [Scene's ALL GameObjects] that have to communicate with Server.
     /// </summary>
-    public class LoginSceneController : MonoBehaviour
+    public class LoginSceneController : ControllerBase
     {
         public LaunchButton launchButton;
         public TCPCommunicator communicator;
@@ -24,11 +24,6 @@ namespace Content.UI
         private bool _isConnected = false;
         
         private float _currentProcess = 0;
-
-        private void Awake()
-        {
-            
-        }
 
         private void OnEnable()
         {
@@ -42,28 +37,41 @@ namespace Content.UI
 
         void Start()
         {
-            messageWindow.AddMessage("SYSTEM", "Connecting to Server...");
-            communicator.ConnectToServer();
+            AddAction(() =>
+            {
+                messageWindow.AddMessage("SYSTEM", "Connecting to Server...");
+                communicator.ConnectToServer();
+            });
         }
 
         void ShowConnected()
         {
-            _isConnected = true;
-            messageWindow.AddMessage("SYSTEM", "Connected to Server.");
+            AddAction(() =>
+            {
+                _isConnected = true;
+                messageWindow.AddMessage("SYSTEM", "Connected to Server.");
+            });
         }
 
         void ShowDisconnected()
         {
-            _isConnected = false;
-            messageWindow.AddMessage("SYSTEM", "Disconnected to Server.");
+            AddAction(() =>
+            {
+                _isConnected = false;
+                messageWindow.AddMessage("SYSTEM", "Disconnected to Server.");
+            });
         }
 
         void Launch()
         {
             if (!_isConnected)
             {
-                messageWindow.AddMessage("SYSTEM", "NOT CONNECTED. Cannot Launch");
-                communicator.ConnectToServer();
+                AddAction(() =>
+                {
+                    messageWindow.AddMessage("SYSTEM", "NOT CONNECTED. Cannot Launch");
+                    communicator.ConnectToServer();
+                });
+                
                 return;
             }
 
@@ -74,19 +82,28 @@ namespace Content.UI
             //Name contains invalid char
             if(!Regex.IsMatch(inputName, @"^[0-9a-zA-Z ]+$"))
             {
-                messageWindow.AddMessage("SYSTEM", "Name contains invalid character");
+                AddAction(() =>
+                {
+                    messageWindow.AddMessage("SYSTEM", "Name contains invalid character");
+                });
                 return;
             }
             //Name is too short
             if (inputName.Length < 2)
             {
-                messageWindow.AddMessage("SYSTEM", "Name is too short");
+                AddAction(() =>
+                {
+                    messageWindow.AddMessage("SYSTEM", "Name is too short");
+                });
                 return;
             }
             //Name is too long
             if (inputName.Length > 36)
             {
-                messageWindow.AddMessage("SYSTEM", "Name is too long");
+                AddAction(() =>
+                {
+                    messageWindow.AddMessage("SYSTEM", "Name is too long");
+                });
                 return;
             }
             
@@ -110,29 +127,47 @@ namespace Content.UI
             if (message.header.MessageName != MessageType.LoginRequest.ToString()) return;
             if (message.header.ACK == 1)
             {
-                GameManager.Instance.ChangeScene(GameManager.Instance.mainSceneName);
+                AddAction(() =>
+                {
+                    GameManager.Instance.ChangeScene(GameManager.Instance.mainSceneName);
+                });
             }
             else
             {
-                messageWindow.AddMessage("SYSTEM", "Cannot Login to server. Reason : " + message.header.Reason);
+                AddAction(() =>
+                {
+                    messageWindow.AddMessage("SYSTEM", "Cannot Login to server. Reason : " + message.header.Reason);
+                });
             }
         }
         
         void SceneLoadStart()
         {
-            messageWindow.AddMessage("SYSTEM", "Loading...");
+            AddAction(() =>
+            {
+                messageWindow.AddMessage("SYSTEM", "Loading...");            
+            });
         }
         
         void SceneLoadComplete()
         {
-            messageWindow.AddMessage("SYSTEM", "Load Complete.");
+            AddAction(() =>
+            {
+                messageWindow.AddMessage("SYSTEM", "Load Complete.");
+            });
         }
 
-        void Update()
+        protected override void Update()
         {
+            base.Update();
+            
             if (Math.Abs(_currentProcess - GameManager.Instance.SceneLoadProgress) > 0.01)
             {
-                messageWindow.AddMessage("SYSTEM", "Process : " + (_currentProcess * 100));
+                AddAction(() =>
+                {
+                    messageWindow.AddMessage("SYSTEM", "Process : " + (_currentProcess * 100));
+                });
+                
                 _currentProcess = GameManager.Instance.SceneLoadProgress;
             }
         }

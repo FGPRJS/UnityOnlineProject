@@ -3,20 +3,26 @@ using UnityEngine;
 
 namespace Content.Communication.Protocol
 {
-    [Serializable]
     public enum MessageType
     {
         LoginRequest,
         HeartBeatRequest,
-        GameObjectSpawnRequest,
-        GameObjectSpawnReport,
+        TankSpawnRequest,
+        TankSpawnSpawnReport,
         GameObjectDestroyRequest,
         GameObjectPositionReport,
         GameObjectActionRequest,
         PlayerChatReport
     }
-    
-    [Serializable]
+
+    public enum TankType
+    {
+        Red = 0,
+        Yellow,
+        Green,
+        Blue
+    }
+
     public enum ACK
     {
         None = 0,
