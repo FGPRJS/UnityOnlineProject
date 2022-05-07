@@ -6,8 +6,8 @@ namespace Content.Communication
 {
     public class Heartbeat
     {
-        private const float HeartbeatInterval = 30;
-        private const float MaxHeartbeatTimeoutCount = 6;
+        private const float HeartbeatInterval = 5;
+        private const float MaxHeartbeatTimeoutCount = 3;
 
         private float _currentHeartbeatTime = 0;
         private int _currentHeartbeatTimeoutCount = 0;
@@ -47,6 +47,7 @@ namespace Content.Communication
             _currentHeartbeatTime += interval;
             if (_currentHeartbeatTime >= HeartbeatInterval)
             {
+                _currentHeartbeatTime = 0;
                 HeartbeatTickEvent?.Invoke();
                 _currentHeartbeatTimeoutCount++;
             }

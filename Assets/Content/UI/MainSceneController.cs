@@ -24,18 +24,8 @@ namespace Content.UI
 
                     if (message.header.ACK != (int)ACK.ACK) return;
 
-                    var readedVectorPos = message.body.Any["Position"].Split(',');
-                    Vector3 position = new Vector3(
-                        float.Parse(readedVectorPos[0]),
-                        float.Parse(readedVectorPos[1]),
-                        float.Parse(readedVectorPos[2]));
-                    
-                    var readedQuaternion = message.body.Any["Quaternion"].Split(',');
-                    Quaternion quaternion = new Quaternion(
-                        float.Parse(readedQuaternion[0]),
-                        float.Parse(readedQuaternion[1]),
-                        float.Parse(readedQuaternion[2]),
-                        float.Parse(readedQuaternion[3]));
+                    Vector3 position = NumericParser.ParseVector(message.body.Any["Position"]);
+                    Quaternion quaternion = NumericParser.ParseQuaternion(message.body.Any["Quaternion"]);
 
                     #region TankType
 
@@ -72,6 +62,36 @@ namespace Content.UI
         {
             //Unsubscribe Event
             TCPCommunicator.Instance.dataReceivedEvent.RemoveListener(DataReceivedEventActivated);
+        }
+
+        private void FixedUpdate()
+        {
+            #region Send Current Position
+            if (!player.pawn) return;
+            var pawnTransform = player.pawn.transform;
+            
+            var message = new CommunicationMessage<Dictionary<string, string>>()
+            {
+                header = new Header()
+                {
+                    MessageName = MessageType.TankPositionReport.ToString()
+                },
+                body = new Body<Dictionary<string, string>>()
+                {
+                    Any = new Dictionary<string, string>()
+                    {
+                        ["Position"] = pawnTransform.position.ToString(),
+                        ["Quaternion"] = pawnTransform.rotation.ToString(),
+                        ["TowerQuaternion"] = player.pawn.tower.transform.rotation.ToString(),
+                        ["CannonQuaternion"] = player.pawn.cannon.transform.rotation.ToString(),
+                    }
+                }
+            };
+
+            TCPCommunicator.Instance.SendData(message);
+            #endregion
+            
+            
         }
     }
 }

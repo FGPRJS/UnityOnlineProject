@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using Content.Communication.Protocol;
 using Newtonsoft.Json;
+using TMPro.SpriteAssetUtilities;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -20,9 +21,9 @@ namespace Content.Communication
         public string ip = "127.0.0.1";
         public int port = 8080;
         private Socket _socket;
+        private DataFrame _frame;
 
         private Heartbeat _heartbeat;
-        private byte[] _receiveBuffer;
 
         public UnityEvent connectedEvent;
         public UnityEvent disconnectedEvent;
@@ -58,11 +59,10 @@ namespace Content.Communication
                 AddressFamily.InterNetwork,
                 SocketType.Stream,
                 ProtocolType.Tcp);
+            _frame = new DataFrame();
 
-            _socket.ReceiveBufferSize = AsyncStateObject.BufferSize;
-            _socket.SendBufferSize = AsyncStateObject.BufferSize;
-            
-            _receiveBuffer = new byte[AsyncStateObject.BufferSize];
+            _socket.ReceiveBufferSize = DataFrame.BufferSize;
+            _socket.SendBufferSize = DataFrame.BufferSize;
         }
 
         public void ConnectToServer()
@@ -103,9 +103,9 @@ namespace Content.Communication
         void BeginReceive()
         {
             _socket.BeginReceive(
-                _receiveBuffer,
+                _frame.buffer,
                 0,
-                _receiveBuffer.Length, 
+                DataFrame.BufferSize, 
                 SocketFlags.None, 
                 DataReceivedCallback, 
                 _socket);
@@ -117,15 +117,50 @@ namespace Content.Communication
             {
                 int bytesRead = _socket.EndReceive(ar);
 
-                if (bytesRead > 0)
+                for (var i = 0; i < bytesRead; i++)
                 {
-                    var receivedMessage = CommunicationUtility.Deserialize(_receiveBuffer);
-                    dataReceivedEvent?.Invoke(receivedMessage);
-                    Debug.Log("Received Data Info : " + Encoding.ASCII.GetString(_receiveBuffer));
-                    Array.Clear(_receiveBuffer, 0, _receiveBuffer.Length);
-                    _heartbeat.ResetHeartbeat();
-                    BeginReceive();
+                    switch (_frame.buffer[i])
+                    {
+                        case 0x01:
+                            
+                            if (!_frame.SOF)
+                            {
+                                _frame.SOF = true;
+                            }
+                            //Already SOF exist => discard before data
+                            else
+                            {
+                                _frame.ResetDataFrame();
+                            }
+                            
+                            break;
+                        
+                        case 0x02:
+
+                            if (_frame.SOF)
+                            {
+                                var completeData = _frame.GetByteData();
+                                var receivedMessage = CommunicationUtility.Deserialize(completeData);
+                                dataReceivedEvent?.Invoke(receivedMessage);
+                            }
+                            //Incomplete Message. Discard
+                            _frame.ResetDataFrame();
+                            
+                            break;
+                        
+                        default :
+
+                            if (_frame.SOF)
+                            {
+                                _frame.AddByte(_frame.buffer[i]);
+                            }
+                            
+                            break;
+                    }
                 }
+
+                _heartbeat.ResetHeartbeat();
+                BeginReceive();
             }
             catch (NullReferenceException)
             {
@@ -160,13 +195,21 @@ namespace Content.Communication
         {
             try
             {
+                var sendData = new byte[byteData.Length + 2];
+                //Set SOF
+                sendData[0] = 0x01;
+                Array.Copy(byteData, 0, sendData, 1, byteData.Length);
+                //Set EOF
+                sendData[^1] = 0x02;
+
                 _socket?.BeginSend(
-                    byteData,
+                    sendData,
                     0,
-                    byteData.Length,
+                    sendData.Length,
                     SocketFlags.None,
                     SendComplete,
                     _socket);
+                
                 Debug.Log("Sending Data Info : " + JsonConvert.DeserializeObject(Encoding.ASCII.GetString(byteData)));
             }
             catch (SocketException)

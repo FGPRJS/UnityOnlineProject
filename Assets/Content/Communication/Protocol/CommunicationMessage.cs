@@ -10,7 +10,7 @@ namespace Content.Communication.Protocol
         TankSpawnRequest,
         TankSpawnSpawnReport,
         GameObjectDestroyRequest,
-        GameObjectPositionReport,
+        TankPositionReport,
         GameObjectActionRequest,
         PlayerChatReport
     }
