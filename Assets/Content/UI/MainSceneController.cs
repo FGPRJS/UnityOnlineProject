@@ -13,32 +13,65 @@ namespace Content.UI
         public LocalMessageWindow messageWindow;
         public Player.Player player;
         public List<Tank> tankInstances;
+        public List<GameObject> gameObjects;
 
+        void Start()
+        {
+            gameObjects = new List<GameObject>();
+        }
+        
         void DataReceivedEventActivated(CommunicationMessage<Dictionary<string,string>> message)
         {
             MessageType messageName = (MessageType)Enum.Parse(typeof(MessageType), message.header.MessageName);
             
             switch (messageName)
             {
-                case MessageType.TankSpawnRequest:
+                case MessageType.PawnSpawnRequest:
 
                     if (message.header.ACK != (int)ACK.ACK) return;
 
                     Vector3 position = NumericParser.ParseVector(message.body.Any["Position"]);
                     Quaternion quaternion = NumericParser.ParseQuaternion(message.body.Any["Quaternion"]);
 
-                    #region TankType
+                    #region GameObject Type
 
-                    var tankType = int.Parse(message.body.Any["Type"]);
+                    var objectType = (GameObjectType)Enum.Parse(typeof(GameObjectType),
+                        message.body.Any["ObjectType"]);
+
+                    switch (objectType)
+                    {
+                        case GameObjectType.Tank:
+
+                            var subObjectType = (TankType)Enum.Parse(typeof(TankType),
+                                message.body.Any["ObjectSubType"]);
+                            
+                            AddAction(() =>
+                            {
+                                var tank = Instantiate(tankInstances[(int)subObjectType], position, quaternion);
+                                tank.id = long.Parse(message.body.Any["ID"]);
+                                player.pawn = tank;
+                            });
+
+                            break;
+                    }
+                    
+                    #endregion
+                    break;
+                
+                case MessageType.PawnPositionReport:
+
+                    long id = long.Parse(message.body.Any["ID"]);
+                    
+                    Vector3 objectPosition = NumericParser.ParseVector(message.body.Any["Position"]);
+                    Quaternion objectRotation = NumericParser.ParseQuaternion(message.body.Any["Quaternion"]);
 
                     AddAction(() =>
                     {
-                        var tank = Instantiate(tankInstances[(int)tankType], position, quaternion);
-                        player.pawn = tank;
+                        var tr = player.pawn.transform;
+                        tr.position = objectPosition;
+                        tr.rotation = objectRotation;
                     });
-                    //Possess
-
-                    #endregion
+                    
                     break;
             }
         }
@@ -48,12 +81,19 @@ namespace Content.UI
             //Subscribe Event
             TCPCommunicator.Instance.dataReceivedEvent.AddListener(DataReceivedEventActivated);
             
-            //Initial 
+            //Initial Request Character
             TCPCommunicator.Instance.SendData(new CommunicationMessage<Dictionary<string,string>>()
             {
                 header = new Header()
                 {
-                    MessageName = MessageType.TankSpawnRequest.ToString()
+                    MessageName = MessageType.PawnSpawnRequest.ToString()
+                },
+                body = new Body<Dictionary<string, string>>()
+                {
+                    Any = new Dictionary<string,string>
+                    {
+                        ["ObjectType"] = "Tank"
+                    }
                 }
             });
         }
@@ -74,12 +114,13 @@ namespace Content.UI
             {
                 header = new Header()
                 {
-                    MessageName = MessageType.TankPositionReport.ToString()
+                    MessageName = MessageType.PawnPositionReport.ToString()
                 },
                 body = new Body<Dictionary<string, string>>()
                 {
                     Any = new Dictionary<string, string>()
                     {
+                        ["ID"] = player.pawn.id.ToString(),
                         ["Position"] = pawnTransform.position.ToString(),
                         ["Quaternion"] = pawnTransform.rotation.ToString(),
                         ["TowerQuaternion"] = player.pawn.tower.transform.rotation.ToString(),

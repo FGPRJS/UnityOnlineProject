@@ -7,14 +7,20 @@ namespace Content.Communication.Protocol
     {
         LoginRequest,
         HeartBeatRequest,
-        TankSpawnRequest,
-        TankSpawnSpawnReport,
-        GameObjectDestroyRequest,
-        TankPositionReport,
-        GameObjectActionRequest,
+        PawnSpawnRequest,
+        PawnSpawnReport,
+        PawnDestroyReport,
+        PawnPositionReport,
+        PawnActionRequest,
         PlayerChatReport
     }
 
+    public enum GameObjectType
+    {
+        Dummy,
+        Tank
+    }
+    
     public enum TankType
     {
         Red = 0,

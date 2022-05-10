@@ -4,15 +4,10 @@ using UnityEngine;
 
 namespace Content.Pawn
 {
-    public class Tank : MonoBehaviour
+    public class Tank : Pawn
     {
         public TankData data;
-        
-        private float _gravityYValue;
 
-        [SerializeField]
-        public CharacterController controller;
-        
         public GameObject tower;
         public GameObject cannon;
 
@@ -51,13 +46,9 @@ namespace Content.Pawn
                 transform.TransformDirection(Vector3.forward * (deltaValue * data.Speed)));
         }
         
-        private void Update()
+        protected override void Update()
         {
-            #region Gravity
-            _gravityYValue +=
-                Physics.gravity.y * Time.deltaTime;
-            controller.Move(new Vector3(0, _gravityYValue, 0));
-            #endregion
+            base.Update();
             
             transform.rotation = Quaternion.Euler(_rotationVector);
             tower.transform.rotation = Quaternion.Euler(_towerRotateVector);

@@ -14,7 +14,7 @@ namespace Content.Communication.Protocol
         /// <returns></returns>
         public static Vector3 ParseVector(string stringVector)
         {
-            var regexVector = Regex.Replace(stringVector, "[^0-9,]", "");
+            var regexVector = Regex.Replace(stringVector, "[^0-9.,]", "");
 
             var parseVector = regexVector.Split(',');
 
