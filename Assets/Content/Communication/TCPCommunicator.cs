@@ -14,9 +14,9 @@ namespace Content.Communication
     /// <summary>
     /// Client Socket Wrapper
     /// </summary>
-    public class TCPCommunicator : MonoBehaviour
+    public class TCPCommunicator : Communicator
     {
-        public static TCPCommunicator Instance;
+        public static Communicator Instance;
 
         public string ip = "127.0.0.1";
         public int port = 8080;
@@ -75,10 +75,16 @@ namespace Content.Communication
         private void Connect()
         {
             Debug.Log("Trying to connect to server...");
-            
+
+            #if Debug
             IPAddress ipAddress = IPAddress.Parse(ip);
             IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
-
+            #else
+            IPHostEntry hostEntry = Dns.GetHostEntry("mypofol.shop");
+            var addresses = hostEntry.AddressList;
+            IPEndPoint localEndPoint = new IPEndPoint(addresses[0], port);
+            #endif
+         
             try
             {
                 _socket.BeginConnect(localEndPoint, ConnectRequestCallback, _socket);
@@ -91,18 +97,22 @@ namespace Content.Communication
 
         private void ConnectRequestCallback(IAsyncResult ar)
         {
-            _socket.EndConnect(ar);
-
-            connectedEvent?.Invoke();
-            
-            BeginReceive();
-            
-            Debug.Log("Successfully connected!");
+            _socket?.EndConnect(ar);
+            if (_socket is { Connected: true })
+            {
+                connectedEvent?.Invoke();
+                BeginReceive();
+                Debug.Log("Successfully connected!");
+            }
+            else
+            {
+                Debug.Log("Connect Failed.");
+            }
         }
 
         void BeginReceive()
         {
-            _socket.BeginReceive(
+            _socket?.BeginReceive(
                 _frame.buffer,
                 0,
                 DataFrame.BufferSize, 
@@ -116,48 +126,7 @@ namespace Content.Communication
             try
             {
                 int bytesRead = _socket.EndReceive(ar);
-
-                for (var i = 0; i < bytesRead; i++)
-                {
-                    switch (_frame.buffer[i])
-                    {
-                        case 0x01:
-                            
-                            if (!_frame.SOF)
-                            {
-                                _frame.SOF = true;
-                            }
-                            //Already SOF exist => discard before data
-                            else
-                            {
-                                _frame.ResetDataFrame();
-                            }
-                            
-                            break;
-                        
-                        case 0x02:
-
-                            if (_frame.SOF)
-                            {
-                                var completeData = _frame.GetByteData();
-                                var receivedMessage = CommunicationUtility.Deserialize(completeData);
-                                dataReceivedEvent?.Invoke(receivedMessage);
-                            }
-                            //Incomplete Message. Discard
-                            _frame.ResetDataFrame();
-                            
-                            break;
-                        
-                        default :
-
-                            if (_frame.SOF)
-                            {
-                                _frame.AddByte(_frame.buffer[i]);
-                            }
-                            
-                            break;
-                    }
-                }
+                ProcessMessage(bytesRead);
 
                 _heartbeat.ResetHeartbeat();
                 BeginReceive();
@@ -170,6 +139,51 @@ namespace Content.Communication
             {
                 Debug.Log("Socket is not usable. Reason : " + ex.Message);
                 ShutDown();
+            }
+        }
+
+        private void ProcessMessage(int bytesRead)
+        {
+            for (var i = 0; i < bytesRead; i++)
+            {
+                switch (_frame.buffer[i])
+                {
+                    case 0x01:
+                            
+                        if (!_frame.SOF)
+                        {
+                            _frame.SOF = true;
+                        }
+                        //Already SOF exist => discard before data
+                        else
+                        {
+                            _frame.ResetDataFrame();
+                        }
+                            
+                        break;
+                        
+                    case 0x02:
+
+                        if (_frame.SOF)
+                        {
+                            var completeData = _frame.GetByteData();
+                            var receivedMessage = CommunicationUtility.Deserialize(completeData);
+                            dataReceivedEvent?.Invoke(receivedMessage);
+                        }
+                        //Incomplete Message. Discard
+                        _frame.ResetDataFrame();
+                            
+                        break;
+                        
+                    default :
+
+                        if (_frame.SOF)
+                        {
+                            _frame.AddByte(_frame.buffer[i]);
+                        }
+                            
+                        break;
+                }
             }
         }
 
