@@ -13,11 +13,11 @@ namespace Content.UI
         public LocalMessageWindow messageWindow;
         public Player.Player player;
         public List<Tank> tankInstances;
-        public Dictionary<long,Pawn.Pawn> instances;
+        public List<GameObject> gameObjects;
 
         void Start()
         {
-            instances = new Dictionary<long,Pawn.Pawn>();
+            gameObjects = new List<GameObject>();
         }
         
         void DataReceivedEventActivated(CommunicationMessage<Dictionary<string,string>> message)
@@ -47,13 +47,8 @@ namespace Content.UI
                             
                             AddAction(() =>
                             {
-                                var id = long.Parse(message.body.Any["ID"]);
-                                
                                 var tank = Instantiate(tankInstances[(int)subObjectType], position, quaternion);
-
-                                tank.id = id;
-                                instances.Add(id, tank);
-                                
+                                tank.id = long.Parse(message.body.Any["ID"]);
                                 player.pawn = tank;
                             });
 
@@ -72,16 +67,12 @@ namespace Content.UI
 
                     AddAction(() =>
                     {
-                        var target = instances[id];
-                        
-                        var tr = target.transform;
+                        var tr = player.pawn.transform;
                         tr.position = objectPosition;
                         tr.rotation = objectRotation;
                     });
-
+                    
                     break;
-                
-                
             }
         }
         
