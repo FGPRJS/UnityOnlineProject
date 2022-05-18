@@ -11,7 +11,7 @@ namespace Content.Communication.Protocol
         {
             var data = JsonConvert.SerializeObject(message);
 
-            return Encoding.ASCII.GetBytes(data);
+            return Encoding.UTF8.GetBytes(data);
         }
 
         public static CommunicationMessage<Dictionary<string,string>> Deserialize(string json)
@@ -21,7 +21,7 @@ namespace Content.Communication.Protocol
 
         public static CommunicationMessage<Dictionary<string,string>> Deserialize(byte[] jsonByte)
         {
-            var data = Encoding.ASCII.GetString(jsonByte);
+            var data = Encoding.UTF8.GetString(jsonByte);
 
             return JsonConvert.DeserializeObject<CommunicationMessage<Dictionary<string,string>>>(data);
         }

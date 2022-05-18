@@ -11,16 +11,76 @@ namespace Content.UI
     public class MainSceneController : ControllerBase
     {
         public LocalMessageWindow messageWindow;
+        private Communicator _communicator;
         public Player.Player player;
         public List<Tank> tankInstances;
         public List<GameObject> gameObjects;
 
-        void Start()
+        void Awake()
         {
             gameObjects = new List<GameObject>();
+            
+            _communicator = Communicator.Instance;
+        }
+
+        private void OnEnable()
+        {
+            //Subscribe Event
+            _communicator.dataReceivedEvent.AddListener(DataReceivedEventActivated);
+            
+            //Initial Request Character
+            _communicator.SendData(new CommunicationMessage<Dictionary<string,string>>()
+            {
+                header = new Header()
+                {
+                    MessageName = MessageType.PawnSpawnRequest.ToString()
+                },
+                body = new Body<Dictionary<string, string>>()
+                {
+                    Any = new Dictionary<string,string>
+                    {
+                        ["ObjectType"] = "Tank"
+                    }
+                }
+            });
+        }
+
+        private void OnDisable()
+        {
+            //Unsubscribe Event
+            _communicator.dataReceivedEvent.RemoveListener(DataReceivedEventActivated);
+        }
+
+        private void FixedUpdate()
+        {
+            #region Send Current Position
+            if (!player.pawn) return;
+            var pawnTransform = player.pawn.transform;
+            
+            var message = new CommunicationMessage<Dictionary<string, string>>()
+            {
+                header = new Header()
+                {
+                    MessageName = MessageType.PawnPositionReport.ToString()
+                },
+                body = new Body<Dictionary<string, string>>()
+                {
+                    Any = new Dictionary<string, string>()
+                    {
+                        ["ID"] = player.pawn.id.ToString(),
+                        ["Position"] = pawnTransform.position.ToString(),
+                        ["Quaternion"] = pawnTransform.rotation.ToString(),
+                        ["TowerQuaternion"] = player.pawn.tower.transform.rotation.ToString(),
+                        ["CannonQuaternion"] = player.pawn.cannon.transform.rotation.ToString(),
+                    }
+                }
+            };
+
+            _communicator.SendData(message);
+            #endregion
         }
         
-        void DataReceivedEventActivated(CommunicationMessage<Dictionary<string,string>> message)
+         void DataReceivedEventActivated(CommunicationMessage<Dictionary<string,string>> message)
         {
             MessageType messageName = (MessageType)Enum.Parse(typeof(MessageType), message.header.MessageName);
             
@@ -58,6 +118,11 @@ namespace Content.UI
                     #endregion
                     break;
                 
+                case MessageType.PawnSpawnReport:
+
+
+                    break;
+                
                 case MessageType.PawnPositionReport:
 
                     long id = long.Parse(message.body.Any["ID"]);
@@ -74,65 +139,6 @@ namespace Content.UI
                     
                     break;
             }
-        }
-        
-        private void OnEnable()
-        {
-            //Subscribe Event
-            TCPCommunicator.Instance.dataReceivedEvent.AddListener(DataReceivedEventActivated);
-            
-            //Initial Request Character
-            TCPCommunicator.Instance.SendData(new CommunicationMessage<Dictionary<string,string>>()
-            {
-                header = new Header()
-                {
-                    MessageName = MessageType.PawnSpawnRequest.ToString()
-                },
-                body = new Body<Dictionary<string, string>>()
-                {
-                    Any = new Dictionary<string,string>
-                    {
-                        ["ObjectType"] = "Tank"
-                    }
-                }
-            });
-        }
-
-        private void OnDisable()
-        {
-            //Unsubscribe Event
-            TCPCommunicator.Instance.dataReceivedEvent.RemoveListener(DataReceivedEventActivated);
-        }
-
-        private void FixedUpdate()
-        {
-            #region Send Current Position
-            if (!player.pawn) return;
-            var pawnTransform = player.pawn.transform;
-            
-            var message = new CommunicationMessage<Dictionary<string, string>>()
-            {
-                header = new Header()
-                {
-                    MessageName = MessageType.PawnPositionReport.ToString()
-                },
-                body = new Body<Dictionary<string, string>>()
-                {
-                    Any = new Dictionary<string, string>()
-                    {
-                        ["ID"] = player.pawn.id.ToString(),
-                        ["Position"] = pawnTransform.position.ToString(),
-                        ["Quaternion"] = pawnTransform.rotation.ToString(),
-                        ["TowerQuaternion"] = player.pawn.tower.transform.rotation.ToString(),
-                        ["CannonQuaternion"] = player.pawn.cannon.transform.rotation.ToString(),
-                    }
-                }
-            };
-
-            TCPCommunicator.Instance.SendData(message);
-            #endregion
-            
-            
         }
     }
 }

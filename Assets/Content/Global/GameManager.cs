@@ -33,7 +33,7 @@ namespace Content.Global
                 Destroy(this);
             }
             
-            UnityEngine.Object.DontDestroyOnLoad(Instance);
+            DontDestroyOnLoad(Instance);
         }
         
         public void ChangeScene(string sceneName)

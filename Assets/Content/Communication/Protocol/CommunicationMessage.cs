@@ -5,8 +5,11 @@ namespace Content.Communication.Protocol
 {
     public enum MessageType
     {
+        Dummy,
         LoginRequest,
-        HeartBeatRequest,
+        Ping,
+        Pong,
+        Close,
         PawnSpawnRequest,
         PawnSpawnReport,
         PawnDestroyReport,

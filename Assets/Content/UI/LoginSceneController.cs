@@ -4,9 +4,6 @@ using System.Text.RegularExpressions;
 using Content.Communication;
 using Content.Communication.Protocol;
 using Content.Global;
-using Script.UI;
-using Unity.VisualScripting;
-using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Content.UI
@@ -17,7 +14,7 @@ namespace Content.UI
     public class LoginSceneController : ControllerBase
     {
         public LaunchButton launchButton;
-        public TCPCommunicator communicator;
+        private Communicator _communicator;
         public LocalMessageWindow messageWindow;
         public NameInput nameInput;
 
@@ -27,12 +24,14 @@ namespace Content.UI
 
         private void OnEnable()
         {
+            _communicator = Communicator.Instance;
+
             GameManager.Instance.sceneLoadStartEvent.AddListener(SceneLoadStart);
             GameManager.Instance.sceneLoadCompleteEvent.AddListener(SceneLoadComplete);
             launchButton.clickedEvent.AddListener(Launch);
-            communicator.dataReceivedEvent.AddListener(DataReceived);
-            communicator.connectedEvent.AddListener(ShowConnected);
-            communicator.disconnectedEvent.AddListener(ShowDisconnected);
+            _communicator.dataReceivedEvent.AddListener(DataReceived);
+            _communicator.connectedEvent.AddListener(ShowConnected);
+            _communicator.disconnectedEvent.AddListener(ShowDisconnected);
         }
 
         void Start()
@@ -40,7 +39,7 @@ namespace Content.UI
             AddAction(() =>
             {
                 messageWindow.AddMessage("SYSTEM", "Connecting to Server...");
-                communicator.ConnectToServer();
+                _communicator.ConnectToServer();
             });
         }
 
@@ -69,7 +68,7 @@ namespace Content.UI
                 AddAction(() =>
                 {
                     messageWindow.AddMessage("SYSTEM", "NOT CONNECTED. Cannot Launch");
-                    communicator.ConnectToServer();
+                    _communicator.ConnectToServer();
                 });
                 
                 return;
@@ -119,7 +118,7 @@ namespace Content.UI
                 }
             };
 
-            communicator.SendData(newMessage);
+            _communicator.SendData(newMessage);
         }
 
         void DataReceived(CommunicationMessage<Dictionary<string,string>> message)
@@ -176,10 +175,10 @@ namespace Content.UI
         {
             GameManager.Instance.sceneLoadStartEvent.RemoveListener(SceneLoadStart);
             GameManager.Instance.sceneLoadCompleteEvent.RemoveListener(SceneLoadComplete);
-            communicator.dataReceivedEvent.RemoveListener(DataReceived);
+            _communicator.dataReceivedEvent.RemoveListener(DataReceived);
             launchButton.clickedEvent.RemoveListener(Launch);
-            communicator.connectedEvent.RemoveListener(ShowConnected);
-            communicator.disconnectedEvent.RemoveListener(ShowDisconnected);
+            _communicator.connectedEvent.RemoveListener(ShowConnected);
+            _communicator.disconnectedEvent.RemoveListener(ShowDisconnected);
         }
     }
 }
