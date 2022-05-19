@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -14,7 +15,7 @@ namespace Content.Communication.Protocol
         /// <returns></returns>
         public static Vector3 ParseVector(string stringVector)
         {
-            var regexVector = Regex.Replace(stringVector, "[^0-9.,]", "");
+            var regexVector = Regex.Replace(stringVector, "[^0-9,.-]", "");
 
             var parseVector = regexVector.Split(',');
 
@@ -28,16 +29,28 @@ namespace Content.Communication.Protocol
 
         public static Quaternion ParseQuaternion(string stringQuaternion)
         {
-            var regexQuaternion = Regex.Replace(stringQuaternion, "[^0-9 ]", "");
+            var regexQuaternion = Regex.Replace(stringQuaternion, "[^0-9 .-]", "");
 
             var parseQuaternion = regexQuaternion.Split(' ');
 
-            Quaternion newQuaternion = new Quaternion(
-                float.Parse(parseQuaternion[0]),
-                float.Parse(parseQuaternion[1]),
-                float.Parse(parseQuaternion[2]),
-                float.Parse(parseQuaternion[3]));
+            Quaternion newQuaternion = new Quaternion();
+            
+            for (int i = 0; i < 4; i++)
+            {
+                float value;
+                
+                try
+                {
+                    value = float.Parse(parseQuaternion[i]);
+                }
+                catch (Exception)
+                {
+                    value = 0.0f;
+                }
 
+                newQuaternion[i] = value;
+            }
+            
             return newQuaternion;
         }
     }
