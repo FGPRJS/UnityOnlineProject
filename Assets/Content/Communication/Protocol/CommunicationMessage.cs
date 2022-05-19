@@ -10,11 +10,11 @@ namespace Content.Communication.Protocol
         Ping,
         Pong,
         Close,
-        PawnSpawnRequest,
-        PawnSpawnReport,
-        PawnDestroyReport,
-        PawnPositionReport,
-        PawnActionRequest,
+        GameObjectSpawnRequest,
+        GameObjectSpawnReport,
+        GameObjectDestroyReport,
+        TankPositionReport,
+        GameObjectActionRequest,
         PlayerChatReport
     }
 
