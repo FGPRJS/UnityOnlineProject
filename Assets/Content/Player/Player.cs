@@ -37,14 +37,14 @@ namespace Content.Player
             var readedMoveAction = moveAction.ReadValue<Vector2>();
             readedMoveAction *= Time.deltaTime;
             
-            pawn.RotateTank(readedMoveAction.x);
-            pawn.MoveForward(readedMoveAction.y);
+            pawn.rotationDelta = readedMoveAction.x;
+            pawn.moveDelta = readedMoveAction.y;
 
             var readedLookAction = lookAction.ReadValue<Vector2>();
             readedLookAction *= Time.deltaTime;
 
-            pawn.RotateCannon(readedLookAction.y);
-            pawn.RotateTower(readedLookAction.x);
+            pawn.cannonRotationDelta = readedLookAction.y;
+            pawn.towerRotationDelta = readedLookAction.x;
             #endregion
         }
     }

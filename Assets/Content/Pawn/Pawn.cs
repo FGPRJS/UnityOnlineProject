@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Content.Pawn
 {
@@ -6,19 +8,11 @@ namespace Content.Pawn
     {
         public long id;
         public string pawnName;
-        
-        protected float GravityYValue;
+        public Vector3 velocity;
+
+        protected Vector3 GravityValue;
 
         [SerializeField]
         public CharacterController controller;
-
-        protected virtual void Update()
-        {
-            #region Gravity
-            GravityYValue +=
-                Physics.gravity.y * Time.deltaTime;
-            controller.Move(new Vector3(0, GravityYValue, 0));
-            #endregion
-        }
     }
 }

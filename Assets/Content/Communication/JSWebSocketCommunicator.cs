@@ -64,9 +64,8 @@ namespace Content.Communication
         {
             var uriBuilder = new UriBuilder(
                 "ws",
-                //"mypofol.shop",
-                "localhost",
-                8080,
+                dnsAddress,
+                port,
                 "websocket");
             JSWebSocket.ConnectToServer(uriBuilder.ToString());
             DontDestroyOnLoad(this);
@@ -75,17 +74,12 @@ namespace Content.Communication
         public override void SendData(CommunicationMessage<Dictionary<string, string>> message)
         {
             var json = JsonConvert.SerializeObject(message);
-//#if UNITY_WEBGL && ! UNITY_EDITOR
             JSWebSocket.Send(json);
-//#endif
         }
 
         public override void ShutDown()
         {
-//#if UNITY_WEBGL && ! UNITY_EDITOR
-
             JSWebSocket.Close(0, "Normal Shutdown");
-//#endif
         }
     }
 }
