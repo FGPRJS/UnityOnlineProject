@@ -3,20 +3,27 @@ using System.Collections.Generic;
 using Content.Communication;
 using Content.Communication.Protocol;
 using Content.Pawn;
+using Content.UI.Components;
 using JetBrains.Annotations;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 using Random = System.Random;
 
 namespace Content.UI
 {
     public class MainSceneController : ControllerBase
     {
-        public LocalMessageWindow messageWindow;
         private Communicator _communicator;
+        [Header("Play")]
         public Player.Player player;
         public List<Tank> tankInstances;
         public Dictionary<long, Pawn.Pawn> Pawns;
+        [Header("Chat")]
+        public LocalMessageWindow messageWindow;
+
+        public ChatInput chatWindow;
 
         void Awake()
         {
@@ -25,6 +32,33 @@ namespace Content.UI
             _communicator = Communicator.Instance;
         }
 
+        void Start()
+        {
+            chatWindow.chatInputChangedEvent.AddListener((isWindowFocused) =>
+            {
+                player.playerMode = isWindowFocused ? 
+                    Player.Player.PlayerMode.UIMode : Player.Player.PlayerMode.PlayMode;
+            });
+            
+            chatWindow.chatSendMessageEvent.AddListener((chat) =>
+            {
+                _communicator.SendData(new CommunicationMessage<Dictionary<string,string>>()
+                {
+                    header = new Header()
+                    {
+                        MessageName = MessageType.PlayerChatReport.ToString()
+                    },
+                    body = new Body<Dictionary<string, string>>()
+                    {
+                        Any = new Dictionary<string,string>
+                        {
+                            ["Sender"] = player.pawn.pawnName,
+                            ["Message"] = chat
+                        }
+                    }
+                });
+            });
+        }
         private void OnEnable()
         {
             //Subscribe Event
@@ -115,6 +149,18 @@ namespace Content.UI
 
             switch (messageName)
             {
+                case MessageType.PlayerChatReport:
+
+                    AddAction(() =>
+                    {
+                        messageWindow.AddMessage(
+                            message.body.Any["Sender"],
+                            message.body.Any["Message"]
+                            );
+                    });
+
+                    break;
+                
                 case MessageType.GameObjectSpawnRequest:
 
                     id = long.Parse(message.body.Any["ID"]);
@@ -179,6 +225,8 @@ namespace Content.UI
              var position = NumericParser.ParseVector(message.body.Any["Position"]);
              var quaternion = NumericParser.ParseQuaternion(message.body.Any["Quaternion"]);
 
+             var pawnName = message.body.Any["PawnName"];
+             
              var id = long.Parse(message.body.Any["ID"]);
 
              #region GameObject Type
@@ -194,6 +242,8 @@ namespace Content.UI
                      {
                          var tank = Instantiate(tankInstances[(int)subObjectType], position, quaternion);
                          tank.id = id;
+                         tank.pawnName = pawnName;
+                         
                          Pawns.Add(id, tank);
                      };
 

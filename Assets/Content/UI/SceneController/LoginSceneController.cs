@@ -114,7 +114,10 @@ namespace Content.UI
                 },
                 body = new Body<Dictionary<string, string>>()
                 {
-                    Any = new Dictionary<string, string> { { "UserName", inputName } }
+                    Any = new Dictionary<string, string>
+                    {
+                         ["UserName"] = inputName
+                    }
                 }
             };
 

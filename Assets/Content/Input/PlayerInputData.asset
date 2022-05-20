@@ -16,3 +16,4 @@ MonoBehaviour:
   LookActionName: Look
   JumpActionName: Jump
   AttackActionName: Attack
+  EnterActionName: Enter

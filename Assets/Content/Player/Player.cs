@@ -1,48 +1,42 @@
 using Content.Pawn;
-using Script;
+using Content.UI;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Content.Player
 {
     public class Player : MonoBehaviour
     {
         public Tank pawn;
-        
-        public PlayerInput input;
-        public PlayerInputData inputData;
 
-        private InputAction moveAction;
-
-        private InputAction lookAction;
-        private InputAction attackAction;
-        private InputAction jumpAction;
-        
-        // Start is called before the first frame update
-        void Start()
+        public enum PlayerMode
         {
-            //Set Input Actions
-            moveAction = input.actions[inputData.MoveActionName];
-            lookAction = input.actions[inputData.LookActionName];
-            attackAction = input.actions[inputData.AttackActionName];
-            jumpAction = input.actions[inputData.JumpActionName];
+            PlayMode,
+            UIMode
         }
 
-        // Update is called once per frame
+        public PlayerMode playerMode;
+        private PlayerInputManager _inputManager;
+
+        void Awake()
+        {
+            _inputManager = PlayerInputManager.Instance;
+        }
+        
         void Update()
         {
             #region PAWN Control
             if (!pawn) return;
+            if (playerMode == PlayerMode.UIMode) return;
             
-            var readedMoveAction = moveAction.ReadValue<Vector2>();
+            var readedMoveAction = _inputManager.moveAction.ReadValue<Vector2>();
             readedMoveAction *= Time.deltaTime;
             
             pawn.rotationDelta = readedMoveAction.x;
             pawn.moveDelta = readedMoveAction.y;
-
-            var readedLookAction = lookAction.ReadValue<Vector2>();
+            
+            var readedLookAction = _inputManager.lookAction.ReadValue<Vector2>();
             readedLookAction *= Time.deltaTime;
-
+            
             pawn.cannonRotationDelta = readedLookAction.y;
             pawn.towerRotationDelta = readedLookAction.x;
             #endregion

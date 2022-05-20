@@ -9,5 +9,6 @@ namespace Script
         public string LookActionName;
         public string JumpActionName;
         public string AttackActionName;
+        public string EnterActionName;
     }
 }

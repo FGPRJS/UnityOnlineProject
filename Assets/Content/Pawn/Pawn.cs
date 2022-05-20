@@ -7,8 +7,9 @@ namespace Content.Pawn
     public class Pawn : MonoBehaviour
     {
         public long id;
-        public string pawnName;
         public Vector3 velocity;
+
+        public string pawnName;
 
         protected Vector3 GravityValue;
 
