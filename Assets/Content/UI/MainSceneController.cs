@@ -57,9 +57,34 @@ namespace Content.UI
         {
             #region Send Current Position
             if (!player.pawn) return;
-            var pawnTransform = player.pawn.transform;
+            var pawn = player.pawn;
 
             var message = new CommunicationMessage<Dictionary<string, string>>()
+            {
+                header = new Header()
+                {
+                    MessageName = MessageType.TankMovingReport.ToString()
+                },
+                body = new Body<Dictionary<string, string>>()
+                {
+                    Any = new Dictionary<string, string>()
+                    {
+                        ["ID"] = pawn.id.ToString(),
+                        ["MoveDirection"] = pawn.moveVector.ToString(),
+                        ["MoveDelta"] = pawn.moveDelta.ToString(),
+                        ["RotationVector"] = pawn.rotationVector.ToString(),
+                        ["RotationDelta"] = pawn.rotationDelta.ToString(),
+                        ["TowerRotationVector"] = pawn.towerRotateVector.ToString(),
+                        ["TowerRotationDelta"] = pawn.towerRotationDelta.ToString(),
+                        ["CannonRotationVector"] = pawn.cannonRotateVector.ToString(),
+                        ["CannonRotationDelta"] = pawn.cannonRotationDelta.ToString(),
+                    }
+                }
+            };
+
+            _communicator.SendData(message);
+            
+            message = new CommunicationMessage<Dictionary<string, string>>()
             {
                 header = new Header()
                 {
@@ -69,12 +94,11 @@ namespace Content.UI
                 {
                     Any = new Dictionary<string, string>()
                     {
-                        ["ID"] = player.pawn.id.ToString(),
-                        ["Position"] = pawnTransform.position.ToString(),
-                        ["Velocity"] =  player.pawn.velocity.ToString(),
-                        ["Quaternion"] = pawnTransform.localRotation.ToString(),
-                        ["TowerQuaternion"] = player.pawn.tower.transform.localRotation.ToString(),
-                        ["CannonQuaternion"] = player.pawn.cannon.transform.localRotation.ToString(),
+                        ["ID"] = pawn.id.ToString(),
+                        ["Position"] = pawn.transform.position.ToString(),
+                        ["Quaternion"] = pawn.transform.rotation.ToString(),
+                        ["TowerQuaternion"] = pawn.tower.transform.rotation.ToString(),
+                        ["CannonQuaternion"] = pawn.cannon.transform.rotation.ToString()
                     }
                 }
             };
@@ -122,13 +146,23 @@ namespace Content.UI
 
                     break;
                 
+                case MessageType.TankMovingReport:
+
+                    id = long.Parse(message.body.Any["ID"]);
+
+                    if (!Pawns.ContainsKey(id)) return;
+                    
+                    AddAction(CreateChangeTankMovingAction(message));
+
+                    break;
+                
                 case MessageType.GameObjectDestroyReport:
 
                     id = long.Parse(message.body.Any["ID"]);
-                    
+
                     AddAction(() =>
                     {
-                        Destroy(Pawns[id].gameObject);
+                        Destroy(this);
                     });
                     
                     break;
@@ -177,21 +211,33 @@ namespace Content.UI
              
              var id = long.Parse(message.body.Any["ID"]);
              
-             var position = NumericParser.ParseVector(message.body.Any["Position"]);
-             var velocity = NumericParser.ParseVector(message.body.Any["Velocity"]);
-             var quaternion = NumericParser.ParseQuaternion(message.body.Any["Quaternion"]);
-             var towerQuaternion = NumericParser.ParseQuaternion(message.body.Any["TowerQuaternion"]);
-             var cannonQuaternion = NumericParser.ParseQuaternion(message.body.Any["CannonQuaternion"]);
+             var rawPositionData = message.body.Any["Position"];
+             var readedPositionData = NumericParser.ParseVector(rawPositionData);
+
+             var rawRotationData = message.body.Any["Quaternion"];
+             var readedRotationData = NumericParser.ParseQuaternion(rawRotationData);
+
+             var rawTowerRotationData = message.body.Any["TowerQuaternion"];
+             var readedTowerRotationData = NumericParser.ParseQuaternion(rawTowerRotationData);
+
+             var rawCannonRotationData = message.body.Any["CannonQuaternion"];
+             var readedCannonRotationData = NumericParser.ParseQuaternion(rawCannonRotationData);
 
              result = () =>
              {
                  var tank = Pawns[id] as Tank;
                  if (tank == null) return;
 
-                 tank.controller.Move(velocity * Time.deltaTime / 0.1f);
-                 tank.transform.localRotation = quaternion;
-                 tank.tower.transform.localRotation = towerQuaternion;
-                 tank.cannon.transform.localRotation = cannonQuaternion;
+                 tank.controller.enabled = false;
+
+                 var trnsf = tank.transform;
+                 
+                 trnsf.localRotation = readedRotationData;
+                 trnsf.position = readedPositionData;
+                 tank.tower.transform.rotation = readedTowerRotationData;
+                 tank.cannon.transform.rotation = readedCannonRotationData;
+                 
+                 tank.controller.enabled = true;
              };
 
              return result;
@@ -208,5 +254,39 @@ namespace Content.UI
                  player.pawn = (Tank)pawn;
              };
          }
+         
+         UnityAction CreateChangeTankMovingAction(CommunicationMessage<Dictionary<string, string>> message)
+         {
+             UnityAction result;
+             
+             var id = long.Parse(message.body.Any["ID"]);
+
+             var moveDirection = NumericParser.ParseVector(message.body.Any["MoveDirection"]);
+             var moveDelta = float.Parse(message.body.Any["MoveDelta"]);
+             var rotationVector = NumericParser.ParseVector(message.body.Any["RotationVector"]);
+             var rotationDelta = float.Parse(message.body.Any["RotationDelta"]);
+             var towerRotationVector = NumericParser.ParseVector(message.body.Any["TowerRotationVector"]);
+             var towerRotationDelta = float.Parse(message.body.Any["TowerRotationDelta"]);
+             var cannonRotationVector = NumericParser.ParseVector(message.body.Any["CannonRotationVector"]);
+             var cannonRotationDelta = float.Parse(message.body.Any["CannonRotationDelta"]);
+
+             result = () =>
+             {
+                 var tank = Pawns[id] as Tank;
+                 if (tank == null) return;
+
+                 tank.moveVector = moveDirection;
+                 tank.moveDelta = moveDelta;
+                 tank.rotationVector = rotationVector;
+                 tank.rotationDelta = rotationDelta;
+                 tank.towerRotateVector = towerRotationVector;
+                 tank.towerRotationDelta = towerRotationDelta;
+                 tank.cannonRotateVector = cannonRotationVector;
+                 tank.cannonRotationDelta = cannonRotationDelta;
+             };
+
+             return result;
+         }
+
     }
 }

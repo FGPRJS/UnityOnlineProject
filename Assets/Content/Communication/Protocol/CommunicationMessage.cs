@@ -14,6 +14,7 @@ namespace Content.Communication.Protocol
         GameObjectSpawnReport,
         GameObjectDestroyReport,
         TankPositionReport,
+        TankMovingReport,
         GameObjectActionRequest,
         PlayerChatReport
     }
