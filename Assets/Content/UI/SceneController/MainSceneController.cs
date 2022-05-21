@@ -232,6 +232,8 @@ namespace Content.UI.SceneController
 
                     id = long.Parse(message.body.Any["ID"]);
 
+                    if (!Pawns.ContainsKey(id)) return;
+                    
                     AddAction(DestroyPawn(id));
                     
                     break;
@@ -362,9 +364,9 @@ namespace Content.UI.SceneController
          {
              void Result()
              {
-                 if (!Pawns.ContainsKey(id)) return;
                  Pawns.TryGetValue(id, out var pawn);
-                 Destroy(pawn);
+                 Pawns.Remove(id);
+                 if (pawn != null) Destroy(pawn.gameObject);
              }
 
              return Result;
