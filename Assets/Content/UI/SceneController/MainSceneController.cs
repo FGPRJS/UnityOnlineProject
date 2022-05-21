@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using Content.Communication;
 using Content.Communication.Protocol;
+using Content.Communication.TickTasking;
 using Content.Pawn;
 using Content.UI.Components;
-using JetBrains.Annotations;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
-using Random = System.Random;
 
-namespace Content.UI
+namespace Content.UI.SceneController
 {
     public class MainSceneController : ControllerBase
     {
@@ -20,6 +17,9 @@ namespace Content.UI
         public Player.Player player;
         public List<Tank> tankInstances;
         public Dictionary<long, Pawn.Pawn> Pawns;
+        private SendPawnMoving _sendPawnMoving;
+        private SendPawnPosition _sendPawnPosition;
+        
         [Header("Chat")]
         public LocalMessageWindow messageWindow;
 
@@ -30,6 +30,11 @@ namespace Content.UI
             Pawns = new Dictionary<long, Pawn.Pawn>();
             
             _communicator = Communicator.Instance;
+            
+            _sendPawnMoving = new SendPawnMoving();
+            _sendPawnMoving.TickEvent += SendPawnMove;
+            _sendPawnPosition = new SendPawnPosition();
+            _sendPawnPosition.TickEvent += SendPawnPos;
         }
 
         void Start()
@@ -83,63 +88,84 @@ namespace Content.UI
 
         private void OnDisable()
         {
+            Debug.LogError("Main Scene Controller Destroyed");
             //Unsubscribe Event
             _communicator.dataReceivedEvent.RemoveListener(DataReceivedEventActivated);
         }
 
         private void FixedUpdate()
         {
-            #region Send Current Position
+            #region Send Current Position/Move
             if (!player.pawn) return;
-            var pawn = player.pawn;
-
-            var message = new CommunicationMessage<Dictionary<string, string>>()
-            {
-                header = new Header()
-                {
-                    MessageName = MessageType.TankMovingReport.ToString()
-                },
-                body = new Body<Dictionary<string, string>>()
-                {
-                    Any = new Dictionary<string, string>()
-                    {
-                        ["ID"] = pawn.id.ToString(),
-                        ["MoveDirection"] = pawn.moveVector.ToString(),
-                        ["MoveDelta"] = pawn.moveDelta.ToString(),
-                        ["RotationVector"] = pawn.rotationVector.ToString(),
-                        ["RotationDelta"] = pawn.rotationDelta.ToString(),
-                        ["TowerRotationVector"] = pawn.towerRotateVector.ToString(),
-                        ["TowerRotationDelta"] = pawn.towerRotationDelta.ToString(),
-                        ["CannonRotationVector"] = pawn.cannonRotateVector.ToString(),
-                        ["CannonRotationDelta"] = pawn.cannonRotationDelta.ToString(),
-                    }
-                }
-            };
-
-            _communicator.SendData(message);
             
-            message = new CommunicationMessage<Dictionary<string, string>>()
-            {
-                header = new Header()
-                {
-                    MessageName = MessageType.TankPositionReport.ToString()
-                },
-                body = new Body<Dictionary<string, string>>()
-                {
-                    Any = new Dictionary<string, string>()
-                    {
-                        ["ID"] = pawn.id.ToString(),
-                        ["Position"] = pawn.transform.position.ToString(),
-                        ["Quaternion"] = pawn.transform.rotation.ToString(),
-                        ["TowerQuaternion"] = pawn.tower.transform.rotation.ToString(),
-                        ["CannonQuaternion"] = pawn.cannon.transform.rotation.ToString()
-                    }
-                }
-            };
-
-            _communicator.SendData(message);
+            _sendPawnMoving.CountTick(Time.fixedDeltaTime);
+            _sendPawnPosition.CountTick(Time.fixedDeltaTime);
+            
             #endregion
         }
+        
+        private void SendPawnPos(object sender, EventArgs arg)
+        {
+            AddAction(() =>
+            {
+                var pawn = player.pawn;
+
+                var message = new CommunicationMessage<Dictionary<string, string>>()
+                {
+                    header = new Header()
+                    {
+                        MessageName = MessageType.TankPositionReport.ToString()
+                    },
+                    body = new Body<Dictionary<string, string>>()
+                    {
+                        Any = new Dictionary<string, string>()
+                        {
+                            ["ID"] = pawn.id.ToString(),
+                            ["Position"] = pawn.transform.position.ToString(),
+                            ["Quaternion"] = pawn.transform.rotation.ToString(),
+                            ["TowerQuaternion"] = pawn.tower.transform.rotation.ToString(),
+                            ["CannonQuaternion"] = pawn.cannon.transform.rotation.ToString()
+                        }
+                    }
+                };
+
+                _communicator.SendData(message);
+            });
+        }
+
+        private void SendPawnMove(object sender, EventArgs arg)
+        {
+            AddAction(() =>
+            {
+                var pawn = player.pawn;
+
+                var message = new CommunicationMessage<Dictionary<string, string>>()
+                {
+                    header = new Header()
+                    {
+                        MessageName = MessageType.TankMovingReport.ToString()
+                    },
+                    body = new Body<Dictionary<string, string>>()
+                    {
+                        Any = new Dictionary<string, string>()
+                        {
+                            ["ID"] = pawn.id.ToString(),
+                            ["MoveDirection"] = pawn.moveVector.ToString(),
+                            ["MoveDelta"] = pawn.moveDelta.ToString(),
+                            ["RotationVector"] = pawn.rotationVector.ToString(),
+                            ["RotationDelta"] = pawn.rotationDelta.ToString(),
+                            ["TowerRotationVector"] = pawn.towerRotateVector.ToString(),
+                            ["TowerRotationDelta"] = pawn.towerRotationDelta.ToString(),
+                            ["CannonRotationVector"] = pawn.cannonRotateVector.ToString(),
+                            ["CannonRotationDelta"] = pawn.cannonRotationDelta.ToString(),
+                        }
+                    }
+                };
+
+                _communicator.SendData(message);
+            });
+        }
+        
         
          void DataReceivedEventActivated(CommunicationMessage<Dictionary<string,string>> message)
         {
@@ -206,10 +232,7 @@ namespace Content.UI
 
                     id = long.Parse(message.body.Any["ID"]);
 
-                    AddAction(() =>
-                    {
-                        Destroy(this);
-                    });
+                    AddAction(DestroyPawn(id));
                     
                     break;
             }
@@ -257,8 +280,6 @@ namespace Content.UI
 
          UnityAction CreateChangeTankPositionAction(CommunicationMessage<Dictionary<string, string>> message)
          {
-             UnityAction result;
-             
              var id = long.Parse(message.body.Any["ID"]);
              
              var rawPositionData = message.body.Any["Position"];
@@ -273,7 +294,7 @@ namespace Content.UI
              var rawCannonRotationData = message.body.Any["CannonQuaternion"];
              var readedCannonRotationData = NumericParser.ParseQuaternion(rawCannonRotationData);
 
-             result = () =>
+             void Result()
              {
                  var tank = Pawns[id] as Tank;
                  if (tank == null) return;
@@ -281,16 +302,16 @@ namespace Content.UI
                  tank.controller.enabled = false;
 
                  var trnsf = tank.transform;
-                 
+
                  trnsf.localRotation = readedRotationData;
                  trnsf.position = readedPositionData;
                  tank.tower.transform.rotation = readedTowerRotationData;
                  tank.cannon.transform.rotation = readedCannonRotationData;
-                 
-                 tank.controller.enabled = true;
-             };
 
-             return result;
+                 tank.controller.enabled = true;
+             }
+
+             return Result;
          }
 
          UnityAction PossessPlayertoPawnAction(long id, Player.Player player)
@@ -300,15 +321,13 @@ namespace Content.UI
                  var pawn = Pawns[id];
                  
                  if(!pawn.GetType().IsAssignableFrom(typeof(Tank))) return;
-                 
+
                  player.pawn = (Tank)pawn;
              };
          }
          
          UnityAction CreateChangeTankMovingAction(CommunicationMessage<Dictionary<string, string>> message)
          {
-             UnityAction result;
-             
              var id = long.Parse(message.body.Any["ID"]);
 
              var moveDirection = NumericParser.ParseVector(message.body.Any["MoveDirection"]);
@@ -320,7 +339,7 @@ namespace Content.UI
              var cannonRotationVector = NumericParser.ParseVector(message.body.Any["CannonRotationVector"]);
              var cannonRotationDelta = float.Parse(message.body.Any["CannonRotationDelta"]);
 
-             result = () =>
+             void Result()
              {
                  var tank = Pawns[id] as Tank;
                  if (tank == null) return;
@@ -333,10 +352,22 @@ namespace Content.UI
                  tank.towerRotationDelta = towerRotationDelta;
                  tank.cannonRotateVector = cannonRotationVector;
                  tank.cannonRotationDelta = cannonRotationDelta;
-             };
+             }
 
-             return result;
+             return Result;
          }
 
+
+         UnityAction DestroyPawn(long id)
+         {
+             void Result()
+             {
+                 if (!Pawns.ContainsKey(id)) return;
+                 Pawns.TryGetValue(id, out var pawn);
+                 Destroy(pawn);
+             }
+
+             return Result;
+         }
     }
 }

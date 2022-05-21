@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Content.UI
+namespace Content.UI.SceneController
 {
     public class ControllerBase : MonoBehaviour
     {

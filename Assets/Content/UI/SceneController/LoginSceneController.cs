@@ -4,9 +4,8 @@ using System.Text.RegularExpressions;
 using Content.Communication;
 using Content.Communication.Protocol;
 using Content.Global;
-using UnityEngine.InputSystem;
 
-namespace Content.UI
+namespace Content.UI.SceneController
 {
     /// <summary>
     /// Very Important GameObject cause this object controls [Scene's ALL GameObjects] that have to communicate with Server.

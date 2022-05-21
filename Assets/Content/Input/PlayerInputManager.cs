@@ -1,9 +1,8 @@
-﻿using System;
-using Script;
+﻿using Script;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Content.UI
+namespace Content.Input
 {
     public class PlayerInputManager : MonoBehaviour
     {
