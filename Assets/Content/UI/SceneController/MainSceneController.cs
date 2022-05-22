@@ -325,6 +325,7 @@ namespace Content.UI.SceneController
                  if(!pawn.GetType().IsAssignableFrom(typeof(Tank))) return;
 
                  player.pawn = (Tank)pawn;
+                 player.pawn.mainCamera.Priority = (int)CameraPriority.Playing;
              };
          }
          
