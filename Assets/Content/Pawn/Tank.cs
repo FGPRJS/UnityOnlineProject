@@ -1,4 +1,5 @@
 using System;
+using Content.Pawn.Skill;
 using Script;
 using UnityEngine;
 
@@ -19,7 +20,10 @@ namespace Content.Pawn
         public float towerRotationDelta = 0.0f;
         public Vector3 cannonRotateVector = Vector3.zero;
         public float cannonRotationDelta = 0.0f;
-        
+
+        [Header("SKILL")]
+        public FireNormalBullet fireSkill;
+
 
         protected void Update()
         {

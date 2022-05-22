@@ -1031,6 +1031,8 @@ MonoBehaviour:
   - {fileID: 2862989058090241074, guid: c0bec241bae910e4396e4b83af438db1, type: 3}
   - {fileID: 12393135945677815, guid: 92852ec27bb6a1f418191ebcc5646ffc, type: 3}
   - {fileID: 2092007795916872230, guid: 3a0c6f84eb3795045a5dcb7933547771, type: 3}
+  bulletInstances:
+  - {fileID: 4912132565201014395, guid: eed4970e06143d4418ffd82527c4e6a3, type: 3}
   messageWindow: {fileID: 839555220}
   chatWindow: {fileID: 552366607}
 --- !u!4 &2094149981

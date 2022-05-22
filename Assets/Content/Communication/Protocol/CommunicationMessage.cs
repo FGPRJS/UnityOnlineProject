@@ -10,19 +10,23 @@ namespace Content.Communication.Protocol
         Ping,
         Pong,
         Close,
-        GameObjectSpawnRequest,
+        PlayerTankSpawnRequest,
         GameObjectSpawnReport,
         GameObjectDestroyReport,
         TankPositionReport,
         TankMovingReport,
         GameObjectActionRequest,
+        BulletSpawnRequest,
         PlayerChatReport
     }
 
     public enum GameObjectType
     {
         Dummy,
-        Tank
+        Tank,
+        
+        
+        Bullet
     }
     
     public enum TankType
@@ -31,6 +35,11 @@ namespace Content.Communication.Protocol
         Yellow,
         Green,
         Blue
+    }
+
+    public enum BulletType
+    {
+        Normal = 0,
     }
 
     public enum ACK

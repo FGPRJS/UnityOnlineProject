@@ -4,9 +4,12 @@ using Content.Communication;
 using Content.Communication.Protocol;
 using Content.Communication.TickTasking;
 using Content.Pawn;
+using Content.Pawn.Bullet;
 using Content.UI.Components;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 namespace Content.UI.SceneController
 {
@@ -16,7 +19,9 @@ namespace Content.UI.SceneController
         [Header("Play")]
         public Player.Player player;
         public List<Tank> tankInstances;
+        public List<Bullet> bulletInstances;
         public Dictionary<long, Pawn.Pawn> Pawns;
+
         private SendPawnMoving _sendPawnMoving;
         private SendPawnPosition _sendPawnPosition;
         
@@ -74,7 +79,7 @@ namespace Content.UI.SceneController
             {
                 header = new Header()
                 {
-                    MessageName = MessageType.GameObjectSpawnRequest.ToString()
+                    MessageName = MessageType.PlayerTankSpawnRequest.ToString()
                 },
                 body = new Body<Dictionary<string, string>>()
                 {
@@ -187,7 +192,7 @@ namespace Content.UI.SceneController
 
                     break;
                 
-                case MessageType.GameObjectSpawnRequest:
+                case MessageType.PlayerTankSpawnRequest:
 
                     id = long.Parse(message.body.Any["ID"]);
 
@@ -228,6 +233,12 @@ namespace Content.UI.SceneController
 
                     break;
                 
+                case MessageType.BulletSpawnRequest :
+                    
+                    AddAction(CreateBullet(message));
+
+                    break;
+                
                 case MessageType.GameObjectDestroyReport:
 
                     id = long.Parse(message.body.Any["ID"]);
@@ -256,25 +267,18 @@ namespace Content.UI.SceneController
 
              #region GameObject Type
 
-             switch (objectType)
+             var subObjectType = (TankType)Enum.Parse(typeof(TankType),
+                 message.body.Any["ObjectSubType"]);
+             
+             result = () =>
              {
-                 case GameObjectType.Tank:
-
-                     var subObjectType = (TankType)Enum.Parse(typeof(TankType),
-                         message.body.Any["ObjectSubType"]);
-                     
-                     result = () =>
-                     {
-                         var tank = Instantiate(tankInstances[(int)subObjectType], position, quaternion);
-                         tank.id = id;
-                         tank.pawnName = pawnName;
-                         
-                         Pawns.Add(id, tank);
-                     };
-
-                     break;
-             }
-                    
+                 var tank = Instantiate(tankInstances[(int)subObjectType], position, quaternion);
+                 tank.id = id;
+                 tank.pawnName = pawnName;
+                 
+                 Pawns.Add(id, tank);
+             };
+             
              #endregion
 
              return result;
@@ -360,6 +364,38 @@ namespace Content.UI.SceneController
              return Result;
          }
 
+         UnityAction CreateBullet(CommunicationMessage<Dictionary<string, string>> message)
+         {
+             var id = long.Parse(message.body.Any["ID"]);
+
+             var position = NumericParser.ParseVector(message.body.Any["Position"]);
+             var quaternion = NumericParser.ParseQuaternion(message.body.Any["Quaternion"]);
+             var force = NumericParser.ParseVector(message.body.Any["Force"]);
+
+             #region GameObject Type
+
+             var subObjectType = (BulletType)Enum.Parse(typeof(BulletType),
+                 message.body.Any["ObjectSubType"]);
+             
+             void Action()
+             {
+                 var bullet = Instantiate(bulletInstances[(int)subObjectType], position, quaternion);
+                 if(Pawns.ContainsKey(id))
+                    bullet.pawnOwner = Pawns[id];
+
+                 var normalBullet = bullet.GetComponent<NormalBullet>();
+                 if (!normalBullet) return;
+
+                 var bulletRigidBody = bullet.GetComponent<Rigidbody>();
+                 if (!bulletRigidBody) return;
+                 
+                 bulletRigidBody.AddForce(force);
+             };
+             
+             #endregion
+
+             return Action;
+         }
 
          UnityAction DestroyPawn(long id)
          {

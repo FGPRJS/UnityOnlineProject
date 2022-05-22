@@ -1,7 +1,10 @@
+using System.Collections.Generic;
+using Content.Communication.Protocol;
 using Content.Input;
 using Content.Pawn;
 using Content.UI;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Content.Player
 {
@@ -40,6 +43,11 @@ namespace Content.Player
             
             pawn.cannonRotationDelta = readedLookAction.y;
             pawn.towerRotationDelta = readedLookAction.x;
+
+            var readedAttackAction = _inputManager.attackAction.ReadValue<float>();
+            if (readedAttackAction > 0)
+                pawn.fireSkill.UseSkill();
+
             #endregion
         }
     }
