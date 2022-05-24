@@ -61,6 +61,7 @@ namespace Content.Communication.Protocol
         public int ACK;
         public string Reason;
         public string MessageName;
+        public DateTime SendTime;
     }
     [Serializable]
     public class Body<T>

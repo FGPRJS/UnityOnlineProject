@@ -73,6 +73,7 @@ namespace Content.Communication
 
         public override void SendData(CommunicationMessage<Dictionary<string, string>> message)
         {
+            message.header.SendTime = DateTime.Now;
             var json = JsonConvert.SerializeObject(message);
             JSWebSocket.Send(json);
         }

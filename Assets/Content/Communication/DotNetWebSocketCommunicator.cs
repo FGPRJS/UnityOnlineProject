@@ -85,6 +85,8 @@ namespace Content.Communication
 
             try
             {
+                message.header.SendTime = DateTime.Now;
+
                 var byteData = CommunicationUtility.Serialize(message);
 
                 SendData(byteData);
