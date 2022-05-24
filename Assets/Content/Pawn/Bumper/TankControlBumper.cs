@@ -31,17 +31,13 @@ namespace Content.Pawn.Bumper
             
             //Rotate
             rotationVector.y += rotationDelta * targetTank.pawnData.RotateSpeed;
-            
-            transform.rotation = Quaternion.Euler(rotationVector);
 
             //Rotate Tower
             towerRotateVector.y += towerRotationDelta * targetTank.tankData.TowerRotateSpeed;
-            
-            //tower.transform.rotation = Quaternion.Euler(towerRotateVector);
-            
+
             //Rotate Cannon
-            cannonRotateVector.x += cannonRotationDelta * targetTank.tankData.CannonRotateSpeed;
-            
+            cannonRotateVector.x -= cannonRotationDelta * targetTank.tankData.CannonRotateSpeed;
+
             if (cannonRotateVector.x > targetTank.tankData.cannonRotationUPLimit)
             {
                 cannonRotateVector.x = targetTank.tankData.cannonRotationUPLimit;
@@ -51,10 +47,6 @@ namespace Content.Pawn.Bumper
                 cannonRotateVector.x = targetTank.tankData.cannonRotationDOWNLimit;
             }
 
-           // Vector3 cannonRotationVector3 = cannon.transform.rotation.eulerAngles;
-            //cannonRotationVector3.x = cannonRotateVector.x;
-            //cannon.transform.rotation = Quaternion.Euler(cannonRotationVector3);
-            
             //MoveForward
             moveVector = transform.TransformDirection(Vector3.forward);
 

@@ -28,12 +28,21 @@ namespace Content.Pawn
             //Succeeding ControlBumper
             var difference = bumper.transform.position - transform.position;
             var moveDirection = difference.normalized;
+            //Remove Vibrant
             if(difference.magnitude > 1)
                 controller.Move(moveDirection * (pawnData.Speed * Time.deltaTime));
 
-            transform.rotation = bumper.transform.rotation;
-            
+            transform.rotation = Quaternion.Lerp(transform.rotation,
+                Quaternion.Euler(bumper.rotationVector),
+                0.5f);
 
+            tower.transform.localRotation= Quaternion.Lerp(tower.transform.localRotation,
+                Quaternion.Euler(bumper.towerRotateVector),
+                0.5f);
+            
+            cannon.transform.localRotation= Quaternion.Lerp(cannon.transform.localRotation,
+                Quaternion.Euler(bumper.cannonRotateVector),
+                0.5f);
         }
     }
 }
