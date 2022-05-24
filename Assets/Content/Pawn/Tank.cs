@@ -2,12 +2,13 @@ using System;
 using Content.Pawn.Skill;
 using Script;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Content.Pawn
 {
     public class Tank : Pawn
     {
-        public TankData data;
+        public TankData tankData;
 
         public GameObject tower;
         public GameObject cannon;
@@ -34,25 +35,25 @@ namespace Content.Pawn
             #endregion
             
             //Rotate
-            rotationVector.y += rotationDelta * data.RotateSpeed;
+            rotationVector.y += rotationDelta * pawnData.RotateSpeed;
             
             transform.rotation = Quaternion.Euler(rotationVector);
 
             //Rotate Tower
-            towerRotateVector.y += towerRotationDelta * data.TowerRotateSpeed;
+            towerRotateVector.y += towerRotationDelta * tankData.TowerRotateSpeed;
             
             tower.transform.rotation = Quaternion.Euler(towerRotateVector);
             
             //Rotate Cannon
-            cannonRotateVector.x += cannonRotationDelta * data.CannonRotateSpeed;
+            cannonRotateVector.x += cannonRotationDelta * tankData.CannonRotateSpeed;
             
-            if (cannonRotateVector.x > data.cannonRotationUPLimit)
+            if (cannonRotateVector.x > tankData.cannonRotationUPLimit)
             {
-                cannonRotateVector.x = data.cannonRotationUPLimit;
+                cannonRotateVector.x = tankData.cannonRotationUPLimit;
             }
-            else if(cannonRotateVector.x < data.cannonRotationDOWNLimit)
+            else if(cannonRotateVector.x < tankData.cannonRotationDOWNLimit)
             {
-                cannonRotateVector.x = data.cannonRotationDOWNLimit;
+                cannonRotateVector.x = tankData.cannonRotationDOWNLimit;
             }
 
             Vector3 cannonRotationVector3 = cannon.transform.rotation.eulerAngles;
@@ -60,11 +61,9 @@ namespace Content.Pawn
             cannon.transform.rotation = Quaternion.Euler(cannonRotationVector3);
             
             //MoveForward
-            controller.Move(
-                transform.TransformDirection(Vector3.forward * (moveDelta * data.Speed)
-                    + GravityValue));
-
-            velocity = controller.velocity;
+            moveVector = transform.TransformDirection(Vector3.forward);
+            
+            controller.Move(moveVector * (moveDelta * pawnData.Speed) + GravityValue);
         }
     }
 }
