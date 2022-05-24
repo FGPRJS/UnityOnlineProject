@@ -11,13 +11,13 @@ namespace Content.Pawn.Bullet
             var targetPawn = other.gameObject.GetComponent<Pawn>();
             if (targetPawn)
             {
-                TriggerEntertoPawn(targetPawn);
+                BulletEntertoPawn(targetPawn);
             }
             
             Destroy(gameObject);
         }
         
-        protected virtual void TriggerEntertoPawn(Pawn pawn)
+        protected virtual void BulletEntertoPawn(Pawn pawn)
         {
             
         }

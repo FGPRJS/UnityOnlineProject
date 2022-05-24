@@ -157,6 +157,7 @@ namespace Content.UI.SceneController
                             ["ID"] = pawn.id.ToString(),
                             ["MoveDirection"] = pawn.moveVector.ToString(),
                             ["MoveDelta"] = pawn.moveDelta.ToString(),
+                            ["MoveSpeed"] = pawn.pawnData.Speed.ToString(),
                             ["RotationVector"] = pawn.rotationVector.ToString(),
                             ["RotationDelta"] = pawn.rotationDelta.ToString(),
                             ["TowerRotationVector"] = pawn.towerRotateVector.ToString(),
@@ -305,16 +306,21 @@ namespace Content.UI.SceneController
                  var tank = Pawns[id] as Tank;
                  if (tank == null) return;
 
-                 tank.controller.enabled = false;
-
+                 var receivedPositionDateTime = message.header.SendTime;
+                 
                  var trnsf = tank.transform;
 
+                 var latency = DateTime.Now - receivedPositionDateTime;
+                 var positionGap = (tank.moveVector
+                     * tank.moveDelta
+                     * tank.pawnData.Speed
+                     * (latency.Milliseconds / 1000 + + latency.Seconds));
+                 
+                 trnsf.position = readedPositionData + positionGap;
                  trnsf.localRotation = readedRotationData;
-                 trnsf.position = readedPositionData;
+
                  tank.tower.transform.rotation = readedTowerRotationData;
                  tank.cannon.transform.rotation = readedCannonRotationData;
-
-                 tank.controller.enabled = true;
              }
 
              return Result;
