@@ -15,12 +15,7 @@ namespace Content.Pawn
 
         public CinemachineVirtualCamera mainCamera;
 
-        protected Vector3 GravityValue;
-
         [NonSerialized]
         public float frameRate;
-        
-        [SerializeField]
-        public CharacterController controller;
     }
 }

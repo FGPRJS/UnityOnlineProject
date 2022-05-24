@@ -5,6 +5,7 @@ using Content.Communication.Protocol;
 using Content.Communication.TickTasking;
 using Content.Pawn;
 using Content.Pawn.Bullet;
+using Content.Pawn.Bumper;
 using Content.UI.Components;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -19,6 +20,7 @@ namespace Content.UI.SceneController
         [Header("Play")]
         public Player.Player player;
         public List<Tank> tankInstances;
+        public TankControlBumper tankControlBumperInstance;
         public List<Bullet> bulletInstances;
         public Dictionary<long, Pawn.Pawn> Pawns;
 
@@ -143,6 +145,7 @@ namespace Content.UI.SceneController
             AddAction(() =>
             {
                 var pawn = player.pawn;
+                var pawnBumper = pawn.bumper;
 
                 var message = new CommunicationMessage<Dictionary<string, string>>()
                 {
@@ -155,15 +158,15 @@ namespace Content.UI.SceneController
                         Any = new Dictionary<string, string>()
                         {
                             ["ID"] = pawn.id.ToString(),
-                            ["MoveDirection"] = pawn.moveVector.ToString(),
-                            ["MoveDelta"] = pawn.moveDelta.ToString(),
+                            ["MoveDirection"] = pawnBumper.moveVector.ToString(),
+                            ["MoveDelta"] = pawnBumper.moveDelta.ToString(),
                             ["MoveSpeed"] = pawn.pawnData.Speed.ToString(),
-                            ["RotationVector"] = pawn.rotationVector.ToString(),
-                            ["RotationDelta"] = pawn.rotationDelta.ToString(),
-                            ["TowerRotationVector"] = pawn.towerRotateVector.ToString(),
-                            ["TowerRotationDelta"] = pawn.towerRotationDelta.ToString(),
-                            ["CannonRotationVector"] = pawn.cannonRotateVector.ToString(),
-                            ["CannonRotationDelta"] = pawn.cannonRotationDelta.ToString(),
+                            ["RotationVector"] = pawnBumper.rotationVector.ToString(),
+                            ["RotationDelta"] = pawnBumper.rotationDelta.ToString(),
+                            ["TowerRotationVector"] = pawnBumper.towerRotateVector.ToString(),
+                            ["TowerRotationDelta"] = pawnBumper.towerRotationDelta.ToString(),
+                            ["CannonRotationVector"] = pawnBumper.cannonRotateVector.ToString(),
+                            ["CannonRotationDelta"] = pawnBumper.cannonRotationDelta.ToString(),
                             ["FrameRate"] = (1 / Time.deltaTime).ToString()
                         }
                     }
@@ -274,9 +277,14 @@ namespace Content.UI.SceneController
              
              result = () =>
              {
+                 var bumper = Instantiate(tankControlBumperInstance, position, quaternion);
+
                  var tank = Instantiate(tankInstances[(int)subObjectType], position, quaternion);
                  tank.id = id;
                  tank.pawnName = pawnName;
+                 tank.bumper = bumper;
+
+                 bumper.targetTank = tank;
                  
                  Pawns.Add(id, tank);
              };
@@ -308,25 +316,22 @@ namespace Content.UI.SceneController
                  if (tank == null) return;
 
                  var receivedPositionDateTime = message.header.SendTime;
-                 
-                 var trnsf = tank.transform;
+
+                 var tankBumper = tank.bumper;
+                 var tankBumperTransform = tankBumper.transform;
 
                  var latency = DateTime.Now - receivedPositionDateTime;
                  
-                 var positionGap = (tank.moveVector
-                     * tank.moveDelta
-                     * tank.pawnData.Speed
-                     * (latency.Milliseconds / 1000 + latency.Seconds)
-                     * tank.frameRate);
-                 Debug.LogWarning($"Current Gap is {positionGap} " +
-                                  $"= MoveVector : {tank.moveVector} " +
-                                  $"* MoveDelta : {tank.moveDelta} " +
-                                  $"* Speed : {tank.pawnData.Speed} " +
-                                  $"* Latency : {latency.Milliseconds / 1000 + latency.Seconds} " +
-                                  $"* FrameRate : {tank.frameRate}");
+                 var positionGap = (tankBumper.moveVector
+                                    * tankBumper.moveDelta
+                                    * tank.pawnData.Speed
+                                    * (latency.Milliseconds / 1000 + latency.Seconds)
+                                    * tank.frameRate);
+
+                 var predictedPosition = readedPositionData + positionGap;
                  
-                 trnsf.position = readedPositionData + positionGap;
-                 trnsf.localRotation = readedRotationData;
+                 tankBumperTransform.position = Vector3.Lerp(tankBumperTransform.position, predictedPosition, 0.5f);
+                 tankBumperTransform.localRotation = readedRotationData;
 
                  tank.tower.transform.rotation = readedTowerRotationData;
                  tank.cannon.transform.rotation = readedCannonRotationData;
@@ -368,14 +373,16 @@ namespace Content.UI.SceneController
                  var tank = Pawns[id] as Tank;
                  if (tank == null) return;
 
-                 tank.moveVector = moveDirection;
-                 tank.moveDelta = moveDelta;
-                 tank.rotationVector = rotationVector;
-                 tank.rotationDelta = rotationDelta;
-                 tank.towerRotateVector = towerRotationVector;
-                 tank.towerRotationDelta = towerRotationDelta;
-                 tank.cannonRotateVector = cannonRotationVector;
-                 tank.cannonRotationDelta = cannonRotationDelta;
+                 var tankBumper = tank.bumper;
+
+                 tankBumper.moveVector = moveDirection;
+                 tankBumper.moveDelta = moveDelta;
+                 tankBumper.rotationVector = rotationVector;
+                 tankBumper.rotationDelta = rotationDelta;
+                 tankBumper.towerRotateVector = towerRotationVector;
+                 tankBumper.towerRotationDelta = towerRotationDelta;
+                 tankBumper.cannonRotateVector = cannonRotationVector;
+                 tankBumper.cannonRotationDelta = cannonRotationDelta;
                  tank.frameRate = frameRate;
              }
 

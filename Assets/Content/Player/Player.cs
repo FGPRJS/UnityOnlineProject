@@ -28,6 +28,7 @@ namespace Content.Player
         
         void Update()
         {
+            //Controller -> Bumper <- Tank
             #region PAWN Control
             if (!pawn) return;
             if (playerMode == PlayerMode.UIMode) return;
@@ -35,15 +36,19 @@ namespace Content.Player
             var readedMoveAction = _inputManager.moveAction.ReadValue<Vector2>();
             readedMoveAction *= Time.deltaTime;
             
-            pawn.rotationDelta = readedMoveAction.x;
-            pawn.moveDelta = readedMoveAction.y;
+            pawn.bumper.rotationDelta = readedMoveAction.x;
+            pawn.bumper.moveDelta = readedMoveAction.y;
             
             var readedLookAction = _inputManager.lookAction.ReadValue<Vector2>();
             readedLookAction *= Time.deltaTime;
             
-            pawn.cannonRotationDelta = readedLookAction.y;
-            pawn.towerRotationDelta = readedLookAction.x;
+            pawn.bumper.cannonRotationDelta = readedLookAction.y;
+            pawn.bumper.towerRotationDelta = readedLookAction.x;
 
+            #endregion
+            
+            #region PAWN Action
+            
             var readedAttackAction = _inputManager.attackAction.ReadValue<float>();
             if (readedAttackAction > 0)
                 pawn.fireSkill.UseSkill();
