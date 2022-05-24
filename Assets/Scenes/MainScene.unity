@@ -430,7 +430,7 @@ GameObject:
   - component: {fileID: 575900090}
   - component: {fileID: 575900089}
   - component: {fileID: 575900088}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Terrain
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -822,7 +822,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 854302364}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 18.028248, y: 4.7875595, z: 12.019749}
+  m_LocalPosition: {x: 2.551609, y: -25153.125, z: 8.814398}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1029,8 +1029,9 @@ MonoBehaviour:
   tankInstances:
   - {fileID: 8799844688789825880, guid: 7cef09ff113e3984e9277203abdf9a60, type: 3}
   - {fileID: 2862989058090241074, guid: c0bec241bae910e4396e4b83af438db1, type: 3}
-  - {fileID: 12393135945677815, guid: 92852ec27bb6a1f418191ebcc5646ffc, type: 3}
+  - {fileID: 1871772370210847264, guid: 92852ec27bb6a1f418191ebcc5646ffc, type: 3}
   - {fileID: 2092007795916872230, guid: 3a0c6f84eb3795045a5dcb7933547771, type: 3}
+  tankControlBumperInstance: {fileID: 6690189297070809596, guid: f11c6d190a98dd94ebd049181fc06fb3, type: 3}
   bulletInstances:
   - {fileID: 4912132565201014395, guid: eed4970e06143d4418ffd82527c4e6a3, type: 3}
   messageWindow: {fileID: 839555220}
