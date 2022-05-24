@@ -164,6 +164,7 @@ namespace Content.UI.SceneController
                             ["TowerRotationDelta"] = pawn.towerRotationDelta.ToString(),
                             ["CannonRotationVector"] = pawn.cannonRotateVector.ToString(),
                             ["CannonRotationDelta"] = pawn.cannonRotationDelta.ToString(),
+                            ["FrameRate"] = (1 / Time.deltaTime).ToString()
                         }
                     }
                 };
@@ -311,10 +312,18 @@ namespace Content.UI.SceneController
                  var trnsf = tank.transform;
 
                  var latency = DateTime.Now - receivedPositionDateTime;
+                 
                  var positionGap = (tank.moveVector
                      * tank.moveDelta
                      * tank.pawnData.Speed
-                     * (latency.Milliseconds / 1000 + + latency.Seconds));
+                     * (latency.Milliseconds / 1000 + latency.Seconds)
+                     * tank.frameRate);
+                 Debug.LogWarning($"Current Gap is {positionGap} " +
+                                  $"= MoveVector : {tank.moveVector} " +
+                                  $"* MoveDelta : {tank.moveDelta} " +
+                                  $"* Speed : {tank.pawnData.Speed} " +
+                                  $"* Latency : {latency.Milliseconds / 1000 + latency.Seconds} " +
+                                  $"* FrameRate : {tank.frameRate}");
                  
                  trnsf.position = readedPositionData + positionGap;
                  trnsf.localRotation = readedRotationData;
@@ -351,6 +360,8 @@ namespace Content.UI.SceneController
              var towerRotationDelta = float.Parse(message.body.Any["TowerRotationDelta"]);
              var cannonRotationVector = NumericParser.ParseVector(message.body.Any["CannonRotationVector"]);
              var cannonRotationDelta = float.Parse(message.body.Any["CannonRotationDelta"]);
+             var rawFrameRate = message.body.Any["FrameRate"];
+             var frameRate = float.Parse(rawFrameRate);
 
              void Result()
              {
@@ -365,6 +376,7 @@ namespace Content.UI.SceneController
                  tank.towerRotationDelta = towerRotationDelta;
                  tank.cannonRotateVector = cannonRotationVector;
                  tank.cannonRotationDelta = cannonRotationDelta;
+                 tank.frameRate = frameRate;
              }
 
              return Result;

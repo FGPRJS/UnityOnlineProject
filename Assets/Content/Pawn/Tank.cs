@@ -62,7 +62,7 @@ namespace Content.Pawn
             
             //MoveForward
             moveVector = transform.TransformDirection(Vector3.forward);
-            
+
             controller.Move(moveVector * (moveDelta * pawnData.Speed) + GravityValue);
         }
     }
